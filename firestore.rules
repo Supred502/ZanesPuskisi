@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+
+  // Admin UIDs
+  function isAdmin() {
+    return request.auth != null
+           && request.auth.uid in [
+             "NLL2HDQcDPVezIih8OKLJ0CCaGl2", // Admin 1
+             "auIgf2eZJkQQffUD0bR4ZYuuArj2"  // Admin 2
+           ];
+  }
+
+  match /databases/{database}/documents {
+
+    // ------------------
+    // PRODUCTS
+    // ------------------
+    match /products/{productId} {
+      // Anyone can read products
+      allow read: if true;
+
+      // Only admins can add/edit/delete products
+      allow write: if isAdmin();
+
+      // ------------------
+      // LIKES (subcollection)
+      // ------------------
+      match /likes/{userId} {
+  			allow read: if true; // everyone can see comments
+        allow create, update, delete: if request.auth != null
+                              && (request.auth.uid == resource.data.userId || isAdmin());
+      }
+
+      // ------------------
+      // COMMENTS (subcollection)
+      // ------------------
+      match /comments/{commentId} {
+        allow read: if true; // everyone can see comments
+        allow create, update, delete: if request.auth != null
+                              && (request.auth.uid == resource.data.userId || isAdmin());
+      }
+    }
+  }
+}
