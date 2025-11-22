@@ -12,6 +12,16 @@ service cloud.firestore {
 
   match /databases/{database}/documents {
 
+    // Top-level comments (seed/demo data)
+    // The runtime app uses per-product subcollections for comments, but
+    // `seedFirestore.js` writes a top-level `comments` collection for demo purposes.
+    // Allow public read so the comments overview page can show seeded comments.
+    match /comments/{commentId} {
+      allow read: if true;
+      // Do NOT allow unauthenticated clients to write top-level demo comments.
+      allow create, update, delete: if false;
+    }
+
     // ------------------
     // PRODUCTS
     // ------------------

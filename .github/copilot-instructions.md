@@ -1,114 +1,67 @@
-<!-- Condensed project-specific Copilot instructions for contributors and AI agents -->
+# Copilot Instructions — ZanesPuskisi
 
-# ZanesPuskisi — Copilot Instructions (concise)
+Purpose: concise, actionable guidance so an AI coding agent can be productive quickly in this repository.
 
-Purpose: Short, actionable guidance so an AI coding agent can be productive quickly.
+- **Stack:** React + Vite (React 19). Tailwind via `@tailwindcss/vite` plugin.
+- **Backend:** Firebase (Auth, Firestore, Storage). Initialization: `src/firebase/firebase.js` (exports `auth`, `db`, `storage`, `googleProvider`).
 
-- **Stack:** React (v19) + Vite; Tailwind via `@tailwindcss/vite` in `vite.config.js`.
-- **Backend:** Firebase (Auth, Firestore, Storage). Init in `src/firebase/firebase.js`.
-
-**Quick commands**
+Quick commands
 
 - Install: `npm install`
-- Dev: `npm run dev`
+- Dev server: `npm run dev`
 - Build: `npm run build`
-- Preview: `npm run preview`
+- Preview build: `npm run preview`
 - Lint: `npm run lint`
 
-**Start files (read first)**
+Key entry points & files
 
-- `src/firebase/firebase.js` — exports `auth`, `db`, `storage`, `googleProvider`.
-- `src/main.jsx` → `src/App.jsx` (app entry; `src/App.js` is an older copy).
-- `src/hooks/useLikes.js` — likes logic; uses `collectionGroup(db, 'likes')`.
-- `src/components/ProductsGrid.jsx`, `src/components/ProductModal.jsx`, `src/components/CommentsSection.jsx` — core UI flows.
-- `seedFirestore.js` — demo seeding (writes top-level `comments` collection; runtime uses per-product subcollections).
+- App entry: `src/main.jsx` which imports `src/App.jsx` (there is also an older `src/App.js` — edit the file actually imported by `main.jsx`).
+- Firebase config: `src/firebase/firebase.js` (update both this and `seedFirestore.js` if switching projects).
+- Core UI: `src/components/ProductsGrid.jsx`, `src/components/ProductModal.jsx`, `src/components/CommentsSection.jsx`.
+- Likes hook: `src/hooks/useLikes.js` (centralized like-count logic using `collectionGroup('likes')`).
+- Seed data: `seedFirestore.js` (note: writes a top-level `comments` collection for demo; runtime uses per-product `comments` subcollections).
 
-**Critical architecture points**
+Critical architecture & data patterns (read before changing data code)
 
-- Primary model: Firestore `products` collection. Products may include an `images` array and subcollections:
+- Primary model: `products` collection. Each product may include fields `name`, `description`, `price`, `images` (array), and subcollections:
   - `products/{productId}/likes/{userUid}`
   - `products/{productId}/comments/{commentId}`
-- Likes are counted via a `collectionGroup('likes')` query — preserve this shape when modifying like code.
-- `ProductModal.jsx` computes storage paths from download URLs (helper `getStoragePathFromUrl`) and schedules background cleanup with `setTimeout` when images are removed — avoid breaking the decoding or timing logic.
+- **Likes shape is important.** Likes are stored as per-product subcollections keyed by user UID so the UI can use `collectionGroup(db, 'likes')` to aggregate counts. Do not change this shape without updating `useLikes.js` and any listeners.
+- **Comments:** runtime code expects `products/{productId}/comments` subcollections. The seed script intentionally uses a different demo shape — be careful when running or migrating seed data.
 
-**Project conventions & gotchas**
+Storage & deletion notes
 
-- Mixed `.js` / `.jsx` files. Edit the file actually imported by `src/main.jsx`.
-- Vite uses `@vitejs/plugin-react` and `babel-plugin-react-compiler`; changing Babel/plugins may affect HMR.
-- ESLint permits unused vars matching `^[A-Z_]` (for components/constants).
-- Firebase config is committed in `src/firebase/firebase.js` and used by `seedFirestore.js`. If switching projects, update both.
+- `ProductModal.jsx` contains helper logic that derives a Storage object path from a download URL (see `getStoragePathFromUrl` there). Deletions rely on this decoding; keep compatible changes.
+- When images are removed, `ProductModal` schedules background cleanup with `setTimeout` (to avoid race conditions). If you alter deletion flows, preserve or intentionally replace this timing behavior.
 
-**Common code patterns (copy-paste)**
+Concrete code examples (copy/paste patterns)
 
-- Toggle like: `doc(db, 'products', productId, 'likes', user.uid)` + `setDoc` / `deleteDoc` (see `src/hooks/useLikes.js`).
-- Listen to products: `onSnapshot(collection(db, 'products'), ...)` (see `ProductsGrid.jsx`).
-- Add comment: `addDoc(collection(db, 'products', productId, 'comments'), { message, name, createdAt: serverTimestamp() })` (see `CommentsSection.jsx`).
+- Toggle like:
+  - `doc(db, 'products', productId, 'likes', user.uid)` then `setDoc` / `deleteDoc` (see `src/hooks/useLikes.js`).
+- Add comment:
+  - `addDoc(collection(db, 'products', productId, 'comments'), { message, name, createdAt: serverTimestamp() })` (see `CommentsSection.jsx`).
+- Listen to products:
+  - `onSnapshot(collection(db, 'products'), ...)` (see `ProductsGrid.jsx`).
 
-**When to be careful**
+Project conventions & gotchas
 
-- Keep `likes` as per-product subcollections to maintain `collectionGroup('likes')` listeners.
-- `seedFirestore.js` uses a demo/top-level `comments` collection — do not assume it matches runtime shape.
+- Mixed `.js` / `.jsx`: Always change the file imported by `src/main.jsx` (currently `App.jsx`).
+- ESLint: repo allows unused vars matching `^[A-Z_]` (used for components/constants).
+- Firebase credentials are committed in `src/firebase/firebase.js` and used by `seedFirestore.js` — update both if moving projects.
 
-If you'd like, I can expand this into a longer `AGENT.md` with a short migration checklist, small code snippets to run locally, and suggested tests. Tell me what to add or which section to clarify.
+When editing or migrating data shapes
 
-<!-- Project-specific Copilot instructions for contributors and AI agents -->
+- Keep likes as `products/{id}/likes/{uid}` unless you update `useLikes.js` and any `collectionGroup('likes')` queries.
+- If moving comments to a top-level collection for scalability, update all read/write sites (`CommentsSection.jsx`, `ProductModal.jsx` cleanup, tests) and document the migration.
 
-# ZanesPuskisi — Copilot Instructions (concise)
+Testing & running notes
 
-Purpose: quick, actionable guidance so an AI coding agent can be immediately productive.
+- Start dev server, then use browser devtools to watch HMR; Vite + `@vitejs/plugin-react` and a Babel React compiler plugin are enabled — changing plugin config can break HMR.
+- To run the seed script (review first): `node seedFirestore.js` (it writes demo data to the committed Firebase project).
 
-- **Project type:** React (v19) + Vite. Tailwind is enabled via `@tailwindcss/vite` in `vite.config.js`.
-- **Backend:** Firebase (Auth, Firestore, Storage). Initialization lives in `src/firebase/firebase.js`.
+If something's unclear or you want more detail (examples, tests, or a migration plan), tell me which section to expand and I will update this file.
 
-Quick developer commands
-
-- **Install:** `npm install`
-- **Dev server:** `npm run dev` (runs `vite`)
-- **Build:** `npm run build`
-- **Preview:** `npm run preview` (runs `vite preview`)
-- **Lint:** `npm run lint` (runs `eslint .`)
-
-High-level architecture & data flow
-
-- **UI:** React app mounts in `src/main.jsx` which imports `src/App.jsx` (note: `src/App.js` is an older alternate file).
-- **Primary data model:** Firestore `products` collection. Each product document may include fields (`name`, `description`, `price`, `images`, `available`, `holidaySpecial`, `tiktokLink`) and subcollections:
-  - `products/{productId}/likes/{userUid}`
-  - `products/{productId}/comments/{commentId}`
-- **Likes pattern:** per-product `likes` subcollection keyed by the user's UID; the UI uses `collectionGroup(db, 'likes')` (see `src/hooks/useLikes.js`) to compute counts across products. Preserve this shape when editing data logic.
-- **Comments pattern:** runtime code reads/writes `collection(db, 'products', productId, 'comments')`. Note `seedFirestore.js` intentionally writes a top-level `comments` collection (demo data) — do not assume seed structure matches runtime.
-- **Storage:** image upload/download URL ↔ storage path decoding is done via a helper in `src/components/ProductModal.jsx`. When changing upload paths, make sure the deletion logic (which derives storage paths from URLs) remains compatible.
-
-Key files to read first
-
-- `src/firebase/firebase.js` — exports `auth`, `db`, `storage`, `googleProvider`.
-- `src/hooks/useLikes.js` — central hook for likes behavior and collectionGroup usage.
-- `src/components/ProductsGrid.jsx` & `src/components/ProductModal.jsx` — listing, liking, uploads, and deletion flows (ProductModal schedules background cleanup when images are removed).
-- `src/components/CommentsSection.jsx` — comment add/list patterns and serverTimestamp usage.
-- `seedFirestore.js` — demo seeding script (writes top-level `comments` collection; read before running).
-
-Project-specific conventions & gotchas
-
-- **File mix:** `.js` and `.jsx` are both used. Edit the file actually imported by `src/main.jsx` to affect the running app.
-- **Dev tooling:** `vite` + `@vitejs/plugin-react` with `babel-plugin-react-compiler` is enabled — be cautious when altering Babel/plugin config (HMR/react-compiler behavior matters).
-- **ESLint rule:** unused vars are allowed if they match `^[A-Z_]` (this permits React components/constants). Run `npm run lint` to see results.
-- **Background deletion:** `ProductModal.jsx` uses `setTimeout` to schedule deletion of likes/comments/product after removing images; avoid breaking this timing logic when modifying deletion/cleanup.
-- **Auth:** Google provider-based Firebase Auth (use `googleProvider` or `onAuthStateChanged(auth, ...)` patterns present in the codebase).
-
-Concrete examples (copy-paste patterns)
-
-- Toggle like: `doc(db, 'products', productId, 'likes', user.uid')` + `setDoc`/`deleteDoc` (see `src/hooks/useLikes.js`).
-- Listen products: `onSnapshot(collection(db, 'products'), ...)` with cleanup return in `ProductsGrid.jsx`.
-- Add comment: `addDoc(collection(db, 'products', productId, 'comments'), { message, name, createdAt: serverTimestamp() })`.
-
-When to change data shapes
-
-- Prefer keeping the per-product `likes` subcollection (so `collectionGroup('likes')` queries continue to work). If migrating comments to a top-level collection, update every read/write site and document the migration.
-
-Running seed data
-
-- `node seedFirestore.js` (review the script first — it writes demo data and uses the embedded Firebase config).
-
-If something's unclear or you want more detail (runtime examples, tests, or a migration plan), tell me which section to expand.
+-- End of instructions
 
 <!-- Project-specific Copilot instructions for contributors and AI agents -->
 

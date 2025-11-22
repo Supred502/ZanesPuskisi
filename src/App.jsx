@@ -6,6 +6,7 @@ import InspirationsGrid from "./components/InspirationsGrid.jsx";
 import AdminPanel from "./components/AdminPanel.jsx";
 import { auth } from "./firebase/firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import CommentsAllPage from "./components/CommentsAllPage.jsx";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -16,13 +17,18 @@ function App() {
   }, []);
 
   return (
-    <div>
-      <Navbar user={user} />
-      <Hero />
-      <AdminPanel user={user} />
-      <ProductsGrid />
-      <InspirationsGrid />
-    </div>
+    // Simple path-based rendering to support a standalone comments page at /comments
+    window.location.pathname === "/comments" ? (
+      <CommentsAllPage />
+    ) : (
+      <div>
+        <Navbar user={user} />
+        <Hero />
+        <AdminPanel user={user} />
+        <ProductsGrid />
+        <InspirationsGrid />
+      </div>
+    )
   );
 }
 

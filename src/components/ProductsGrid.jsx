@@ -29,6 +29,28 @@ export default function ProductsGrid() {
     };
   }, []);
 
+  // If the URL hash indicates a specific product (e.g. #product-<id>), open that product's modal.
+  useEffect(() => {
+    function openFromHash() {
+      const h = window.location.hash;
+      if (h && h.startsWith("#product-")) {
+        const id = h.replace("#product-", "");
+        const found = products.find((p) => p.id === id);
+        if (found) {
+          setSelectedProduct(found);
+        }
+      }
+    }
+
+    // Try once when products change (after fetching)
+    openFromHash();
+
+    // Also listen for hash changes while the page is open
+    const onHash = () => openFromHash();
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, [products]);
+
   // useLikes hook provides likesMap, likesCount, toggleLike and user
   const { likesMap, likesCount, toggleLike, user: hookUser } =
     useLikes(products);
@@ -91,7 +113,15 @@ export default function ProductsGrid() {
         <ProductModal
           product={selectedProduct}
           user={hookUser}
-          onClose={() => setSelectedProduct(null)}
+          onClose={() => {
+            setSelectedProduct(null);
+            try {
+              // Clear hash and navigate to products anchor
+              window.history.replaceState(null, "", window.location.pathname + "#produkti");
+            } catch {
+              /* ignore */
+            }
+          }}
         />
       )}
     </>

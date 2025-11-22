@@ -188,9 +188,17 @@ export default function Navbar({ user }) {
             Iedvesma
           </a>
           <a
-            href="#komentari"
+            href="/comments"
             className="font-medium"
-            onClick={(e) => scrollToId("komentari", e)}
+            onClick={(e) => {
+              e.preventDefault();
+              // Navigate to comments page in the same tab and keep history (back button will work)
+                try {
+                  window.location.assign("/comments");
+                } catch {
+                  window.location.href = "/comments";
+                }
+            }}
           >
             Komentāri
           </a>
