@@ -16,9 +16,11 @@ import {
 } from "firebase/storage";
 import { storage } from "../firebase/firebase";
 import CommentsSection from "./CommentsSection.jsx";
+import ImageRotator from "./ImageRotator.jsx";
 
 export default function ProductModal({ product, user, onClose }) {
   const [current, setCurrent] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(product?.name || "");
   const [description, setDescription] = useState(product?.description || "");
@@ -29,15 +31,22 @@ export default function ProductModal({ product, user, onClose }) {
   const [images, setImages] = useState(product?.images || []);
   const [saving, setSaving] = useState(false);
   const fileRef = useRef(null);
+  const addRef = useRef(null);
   const [pendingConfirm, setPendingConfirm] = useState(null);
 
   // pendingConfirm: null or { type: 'single'|'all', idx?: number }
+  const rotatorRef = useRef(null);
 
   if (!product) return null;
 
-  const next = () => setCurrent((c) => (c + 1) % Math.max(1, images.length));
-  const prev = () =>
-    setCurrent((c) => (c - 1 + images.length) % Math.max(1, images.length));
+  const next = () => {
+    if (rotatorRef.current && rotatorRef.current.next) rotatorRef.current.next();
+    if (rotatorRef.current && rotatorRef.current.pause) rotatorRef.current.pause();
+  };
+  const prev = () => {
+    if (rotatorRef.current && rotatorRef.current.prev) rotatorRef.current.prev();
+    if (rotatorRef.current && rotatorRef.current.pause) rotatorRef.current.pause();
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -316,42 +325,43 @@ export default function ProductModal({ product, user, onClose }) {
     }
   };
 
+  
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white w-11/12 max-w-4xl max-h-[90vh] overflow-auto rounded">
-        <div className="p-4 flex justify-between items-start">
-          <div>
-            <h3 className="text-xl font-bold">{product.name}</h3>
-            <p className="text-sm text-gray-600">{product.price} €</p>
-          </div>
-          <div className="flex gap-2">
-            <button onClick={onClose} className="px-3 py-1 rounded bg-gray-200">
-              Aizvērt
-            </button>
-          </div>
-        </div>
+      <div className="w-11/12 max-w-4xl max-h-[90vh] overflow-auto rounded" style={{ backgroundColor: 'var(--panel)', color: 'var(--text)' }}>
 
-        <div className="px-4 pb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="px-4 pt-4 pb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <div className="w-full mb-2">
               {images && images.length > 0 ? (
-                <div className="w-full aspect-square rounded overflow-hidden relative">
-                  <img
-                    src={images[current]}
-                    alt={product.name}
-                    className="w-full h-full object-contain bg-black"
+                <div className="w-full aspect-square rounded overflow-hidden relative" style={{ background: 'var(--panel)' }}>
+                  <ImageRotator
+                    ref={rotatorRef}
+                    images={images}
+                    autoRotateInterval={3000}
+                    useClock={true}
+                    pause={isPaused}
+                    setPause={setIsPaused}
+                    pauseOnInteraction={true}
+                    className="w-full h-full"
+                    imgClassName="object-contain cursor-pointer"
+                    onImageClick={() => setIsPaused(true)}
+                    onIndexChange={(i) => setCurrent(i)}
                   />
                   {images.length > 1 && (
                     <>
                       <button
-                        onClick={prev}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded"
+                        onClick={() => { prev(); setIsPaused(true); }}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded"
+                        style={{ background: 'var(--btn-ghost-hover-bg)' }}
                       >
                         ‹
                       </button>
                       <button
-                        onClick={next}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded"
+                        onClick={() => { next(); setIsPaused(true); }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded"
+                        style={{ background: 'var(--btn-ghost-hover-bg)' }}
                       >
                         ›
                       </button>
@@ -359,13 +369,30 @@ export default function ProductModal({ product, user, onClose }) {
                   )}
                 </div>
               ) : (
-                <div className="w-full aspect-square bg-gray-100 rounded flex items-center justify-center">
+                <div className="w-full aspect-square rounded flex items-center justify-center" style={{ background: 'var(--panel)', color: 'var(--muted)' }}>
                   Nav attēla
                 </div>
               )}
             </div>
 
             <div className="flex gap-2 items-center">
+              <input
+                onChange={handleFileChangeAdd}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                id="add-files"
+                ref={addRef}
+              />
+              <button
+                type="button"
+                onClick={() => addRef.current?.click()}
+                className="px-4 py-2 rounded bg-green-200 text-green-800"
+              >
+                Pievienot attēlu
+              </button>
+
               <input
                 ref={fileRef}
                 onChange={handleFileChangeReplace}
@@ -375,33 +402,20 @@ export default function ProductModal({ product, user, onClose }) {
               />
               <button
                 onClick={() => fileRef.current?.click()}
-                className="px-3 py-1 rounded bg-yellow-100"
+                className="px-4 py-2 rounded bg-yellow-100 text-yellow-800"
               >
                 Mainīt attēlu
               </button>
-              <input
-                onChange={handleFileChangeAdd}
-                type="file"
-                accept="image/*"
-                multiple
-                className="hidden"
-                id="add-files"
-              />
-              <label
-                htmlFor="add-files"
-                className="px-3 py-1 rounded bg-green-200 cursor-pointer inline-flex items-center justify-center text-center"
-              >
-                Pievienot attēlu
-              </label>
+
               <button
                 onClick={() => handleDeleteImage(current)}
-                className="px-3 py-1 rounded bg-red-100"
+                className="px-4 py-2 rounded bg-red-100 text-red-700"
               >
                 Noņemt attēlu
               </button>
               <button
                 onClick={handleDeleteAllImages}
-                className="px-3 py-1 rounded bg-gray-100"
+                className="px-4 py-2 rounded bg-gray-100 text-gray-800"
               >
                 Noņemt visus
               </button>
@@ -410,13 +424,18 @@ export default function ProductModal({ product, user, onClose }) {
             {images && images.length > 1 && (
               <div className="flex gap-2 overflow-x-auto mt-2">
                 {images.map((src, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setCurrent(i)}
-                    className={`w-20 h-20 rounded overflow-hidden border ${
-                      i === current ? "ring-2 ring-green-300" : ""
+                    <button
+                      key={i}
+                      onClick={() => {
+                        if (rotatorRef.current && rotatorRef.current.setCurrent) rotatorRef.current.setCurrent(i);
+                        if (rotatorRef.current && rotatorRef.current.pause) rotatorRef.current.pause();
+                        setIsPaused(true);
+                      }}
+                      className={`w-20 h-20 rounded overflow-hidden border ${
+                      i === current ? "ring-2" : ""
                     }`}
-                  >
+                      style={{ borderColor: 'var(--btn-ghost-border)', boxShadow: i === current ? `0 0 0 3px rgba(100,108,255,0.12)` : 'none' }}
+                    >
                     <img
                       src={src}
                       alt={`thumb-${i}`}
@@ -427,30 +446,39 @@ export default function ProductModal({ product, user, onClose }) {
               </div>
             )}
           </div>
-
           <div>
+            <div className="flex justify-between items-center">
+              <h4 className="text-lg font-semibold" style={{ color: 'var(--text)' }}>{product.name}</h4>
+              <div className="flex items-center gap-4">
+                <p className="text-lg font-semibold" style={{ color: 'var(--text)' }}>{product.price} €</p>
+                <button onClick={onClose} className="px-3 py-1 rounded btn btn-ghost">
+                  Aizvērt
+                </button>
+              </div>
+            </div>
             {!editing ? (
               <div>
-                <h4 className="text-lg font-semibold">{product.name}</h4>
-                <p className="mt-2 whitespace-pre-wrap">{product.description}</p>
+                <p className="mt-2 whitespace-pre-wrap" style={{ color: 'var(--muted)' }}>{product.description}</p>
                 {product.tiktokLink && (
                   <p className="mt-2">
                     <a
                       href={product.tiktokLink}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-blue-600 underline"
+                      className="underline"
+                      style={{ color: 'var(--primary)' }}
+                      aria-label="Atvērt TikTok"
                     >
-                      Atvērt TikTok
+                      <img src="/tiktok.png" alt="TikTok" className="tiktok-icon" />
                     </a>
                   </p>
                 )}
                 <div className="mt-4 flex gap-2">
-                  <span className="px-2 py-1 rounded bg-gray-100">
+                  <span className={`px-2 py-1 rounded badge ${available ? 'badge-available' : 'badge-unavailable'}`}>
                     {available ? "Pieejams" : "Pārdots"}
                   </span>
                   {holiday && (
-                    <span className="px-2 py-1 rounded bg-yellow-100">Svētku piedāvājums</span>
+                    <span className="px-2 py-1 rounded badge badge-holiday">Svētku piedāvājums</span>
                   )}
                 </div>
 
@@ -458,7 +486,7 @@ export default function ProductModal({ product, user, onClose }) {
                   {user && (
                     <button
                       onClick={() => setEditing(true)}
-                      className="px-3 py-1 rounded bg-blue-500 text-white"
+                      className="px-3 py-1 rounded btn-primary"
                     >
                       Rediģēt
                     </button>
@@ -511,18 +539,18 @@ export default function ProductModal({ product, user, onClose }) {
                     Svētku piedāvājums
                   </label>
                 </div>
-                <div className="flex gap-2 items-center">
+                    <div className="flex gap-2 items-center">
                   <div className="flex gap-2">
                     <button
                       onClick={handleSave}
                       disabled={saving}
-                      className="px-3 py-1 rounded bg-green-600 text-white"
+                      className="px-3 py-1 rounded btn-primary"
                     >
                       Saglabāt
                     </button>
                     <button
                       onClick={() => setEditing(false)}
-                      className="px-3 py-1 rounded bg-gray-200"
+                      className="px-3 py-1 rounded btn btn-ghost"
                     >
                       Atcelt
                     </button>
@@ -540,9 +568,9 @@ export default function ProductModal({ product, user, onClose }) {
                 className="absolute inset-0 bg-black/40"
                 onClick={confirmCancel}
               />
-              <div className="relative bg-white rounded shadow-lg w-11/12 max-w-md p-4 z-70">
+              <div className="relative rounded shadow-lg w-11/12 max-w-md p-4 z-70" style={{ backgroundColor: 'var(--panel)', color: 'var(--text)' }}>
                 <h4 className="font-semibold text-lg mb-2">Apstiprināt</h4>
-                <p className="text-sm text-gray-700 mb-4">
+                <p className="text-sm mb-4" style={{ color: 'var(--muted)' }}>
                   {pendingConfirm.type === "single"
                     ? "Pēdējā attēla noņemšana dzēsīs arī produktu. Turpināt?"
                     : "Noņemt visus attēlus? Tas dzēsīs produktu. Turpināt?"}
@@ -550,13 +578,13 @@ export default function ProductModal({ product, user, onClose }) {
                 <div className="flex justify-end gap-2">
                   <button
                     onClick={confirmCancel}
-                    className="px-3 py-1 rounded bg-gray-200"
+                    className="px-3 py-1 rounded btn btn-ghost"
                   >
                     Atcelt
                   </button>
                   <button
                     onClick={confirmProceed}
-                    className="px-3 py-1 rounded bg-red-500 text-white"
+                    className="px-3 py-1 rounded btn btn-danger"
                   >
                     Dzēst
                   </button>

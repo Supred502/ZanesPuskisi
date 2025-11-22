@@ -146,13 +146,10 @@ function AdminPanelInner({ user }) {
   };
 
   return (
-    <section className="p-8 bg-beige-50">
+    <section className="p-8" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
       <h2 className="text-2xl font-bold mb-6">Admin Panelis — Zanes Pušķīši</h2>
 
-      <div
-        className="bg-white rounded-lg shadow-sm p-6"
-        style={{ backgroundColor: "#FAF9F6" }}
-      >
+      <div className="rounded-lg shadow-sm p-6" style={{ backgroundColor: 'var(--panel)', border: '1px solid var(--btn-ghost-border)' }}>
         {error && <div className="text-red-600 mb-4">{error}</div>}
         {success && <div className="text-green-600 mb-4">{success}</div>}
         <form
@@ -161,10 +158,10 @@ function AdminPanelInner({ user }) {
         >
           {/* Left: Preview */}
           <div className="md:col-span-1 flex flex-col gap-4">
-            <div className="bg-white rounded-lg p-4 shadow-inner">
+            <div className="rounded-lg p-4 shadow-inner" style={{ backgroundColor: 'var(--panel)' }}>
               <div className="w-full aspect-square">
                 {images.length === 0 ? (
-                  <div className="w-full h-full rounded-md bg-green-50 flex items-center justify-center text-gray-500">
+                  <div className="w-full h-full rounded-md" style={{ backgroundColor: 'rgba(255,255,255,0.02)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>
                     Produkta priekšskatījums
                   </div>
                 ) : (
@@ -325,9 +322,11 @@ function AdminPanelInner({ user }) {
                 <button
                   type="button"
                   onClick={() => setAvailable((v) => !v)}
-                  className={`w-12 h-6 rounded-full p-0.5 ${
-                    available ? "bg-green-500" : "bg-gray-300"
-                  }`}
+                  className={`w-12 h-6 rounded-full p-0.5`}
+                  style={{
+                    background: available ? 'var(--badge-available-bg)' : 'transparent',
+                    border: '1px solid var(--btn-ghost-border)'
+                  }}
                 >
                   <div
                     className={`bg-white w-5 h-5 rounded-full transition-transform ${
@@ -335,7 +334,7 @@ function AdminPanelInner({ user }) {
                     }`}
                   />
                 </button>
-                <span className="text-sm text-gray-600">
+                <span className={`ml-2 px-2 py-1 rounded badge ${available ? 'badge-available' : 'badge-unavailable'}`}>
                   {available ? "Pieejams" : "Pārdots"}
                 </span>
               </div>
@@ -370,16 +369,12 @@ function AdminPanelInner({ user }) {
 
           {/* Bottom full-width submit */}
           <div className="md:col-span-3">
-            <div className="mt-6">
+              <div className="mt-6">
               <button
                 type="submit"
                 disabled={disabled}
                 aria-disabled={disabled}
-                className={`w-full py-3 rounded text-lg ${
-                  !disabled
-                    ? "bg-green-600 text-white"
-                    : "bg-gray-200 text-gray-600 cursor-not-allowed"
-                }`}
+                className={`w-full py-3 rounded text-lg ${!disabled ? 'btn-primary' : 'bg-gray-200 text-gray-600 cursor-not-allowed'}`}
               >
                 Pievienot produktu
               </button>

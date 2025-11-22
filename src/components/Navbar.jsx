@@ -6,6 +6,13 @@ export default function Navbar({ user }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [newName, setNewName] = useState("");
+  const [theme, setTheme] = useState(() => {
+    try {
+      return localStorage.getItem("theme") || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    } catch {
+      return "light";
+    }
+  });
   const menuRef = useRef(null);
 
   // Close menu when clicking outside. Use pointerdown for reliable ordering.
@@ -49,6 +56,19 @@ export default function Navbar({ user }) {
     }
   };
 
+  // Toggle between 'light' and 'dark' theme and persist the choice.
+  const toggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    try {
+      localStorage.setItem("theme", next);
+      document.documentElement.classList.remove("theme-dark", "theme-light");
+      document.documentElement.classList.add(`theme-${next}`);
+    } catch {
+      // ignore
+    }
+  };
+
   const scrollToId = (id, e) => {
     if (e) e.preventDefault();
     const el = document.getElementById(id);
@@ -69,13 +89,13 @@ export default function Navbar({ user }) {
   };
 
   return (
-    <header className="bg-green-100">
+    <header className="" style={{ backgroundColor: 'var(--panel)', color: 'var(--text)' }}>
       <div className="p-3 flex items-center justify-between max-w-6xl mx-auto">
         <a href="/" className="flex items-center">
           <img
             src="/Zanes_Pušķīši.png"
             alt="Zanes Pušķīši"
-            className="h-10 w-auto"
+            className="header-logo"
           />
         </a>
 
@@ -85,8 +105,9 @@ export default function Navbar({ user }) {
             <button
               type="button"
               onClick={handleSignIn}
-              className="bg-blue-600 text-white px-3 py-1 rounded"
+              className="btn btn-primary"
             >
+              <img src="/google.png" alt="Google" className="login-google-icon" />
               Pieslēgties
             </button>
           ) : (
@@ -97,8 +118,9 @@ export default function Navbar({ user }) {
             >
               <button
                 onClick={() => setMenuOpen((s) => !s)}
-                className="w-10 h-10 rounded-full overflow-hidden border-2 border-white"
+                className="w-10 h-10 rounded-full overflow-hidden avatar-button"
                 title={user.displayName || user.email}
+                aria-label="Account menu"
               >
                 {user.photoURL ? (
                   <img
@@ -107,17 +129,31 @@ export default function Navbar({ user }) {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <span className="flex items-center justify-center w-full h-full bg-gray-200">
+                  <span className="avatar-fallback">
                     {(user.displayName || user.email || "U")[0]}
                   </span>
                 )}
               </button>
 
               {menuOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-white border rounded shadow-md z-50">
-                  <div className="p-2 text-sm text-gray-700">Pieslēdzies kā</div>
-                  <div className="px-3 pb-2 font-medium">{user.displayName || user.email}</div>
-                  <div className="border-t" />
+                <div
+                  className="absolute right-0 mt-2 w-64 rounded shadow-md z-50"
+                  style={{
+                    backgroundColor: "var(--panel)",
+                    border: "1px solid var(--btn-ghost-border)",
+                    color: "var(--text)",
+                  }}
+                >
+                  <div className="p-2 text-sm" style={{ color: 'var(--muted)' }}>Pieslēdzies kā</div>
+                  <div className="px-3 pb-2 font-medium flex items-center gap-2">
+                    {/* Inline Google 'G' svg to show account provider */}
+                    <svg width="18" height="18" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <path fill="#4285F4" d="M43.6 20.4H42V20H24v8h11.3C33.6 32 29.2 35 24 35c-6.1 0-11-4.9-11-11s4.9-11 11-11c3 0 5.7 1.1 7.8 2.9l5.5-5.5C33 6.6 28.8 5 24 5 12.95 5 4 13.95 4 25s8.95 20 20 20 20-8.95 20-20c0-1.3-.12-2.6-.4-3.8z"/>
+                      <path fill="#34A853" d="M6.3 14.7l6.4 4.7C14 16.4 18.6 13 24 13c3 0 5.7 1.1 7.8 2.9l5.5-5.5C33 6.6 28.8 5 24 5 16.2 5 9.1 8.7 6.3 14.7z"/>
+                    </svg>
+                    <span style={{overflowWrap:'anywhere'}}>{user.displayName || user.email}</span>
+                  </div>
+                  <div style={{ borderTop: '1px solid var(--btn-ghost-border)' }} />
                   {!editing ? (
                     <>
                       <button
@@ -126,16 +162,29 @@ export default function Navbar({ user }) {
                           setEditing(true);
                           setNewName(user.displayName || "");
                         }}
-                        className="w-full text-left px-3 py-2 hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2"
+                        style={{ textAlign: 'left' }}
                       >
                         Mainīt parādāmo vārdu
                       </button>
                       <button
                         type="button"
                         onClick={handleSignOut}
-                        className="w-full text-left px-3 py-2 hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2"
+                        style={{ textAlign: 'left' }}
                       >
                         Izrakstīties
+                      </button>
+
+                      {/* Theme toggle */}
+                      <button
+                        type="button"
+                        onClick={toggleTheme}
+                        className="w-full text-left px-3 py-2"
+                        style={{ textAlign: 'left' }}
+                        title="Toggle light/dark theme"
+                      >
+                        {theme === 'dark' ? 'Atspējot tumšo režīmu' : 'Ieslēgt tumšo režīmu'}
                       </button>
                     </>
                   ) : (
@@ -171,7 +220,7 @@ export default function Navbar({ user }) {
         </div>
       </div>
 
-      <nav className="py-2 border-t border-green-200">
+      <nav className="py-2" style={{ borderTop: '1px solid var(--btn-ghost-border)' }}>
         <div className="max-w-6xl mx-auto flex justify-center gap-6 p-2">
           <a
             href="#produkti"

@@ -2,9 +2,11 @@ import React from "react";
 
 export default function Hero() {
   return (
-    <section className="bg-green-50 text-center py-16">
-      <h2 className="text-4xl font-bold mb-4">Laipni lūgti ZanesPušķīšos!</h2>
-      <p className="text-lg">Roku darbs ziedi un dekori katrai īpašai dienai</p>
+    <section className="hero">
+      <div className="site-container" style={{height: 'var(--hero-height)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center'}}>
+        <h2 className="text-4xl font-bold mb-4" style={{color: 'var(--hero-text)'}}>Laipni lūgti ZanesPušķīšos!</h2>
+        <p className="text-lg" style={{color: 'var(--muted)'}}>Roku darbs ziedi un dekori katrai īpašai dienai</p>
+      </div>
     </section>
   );
 }

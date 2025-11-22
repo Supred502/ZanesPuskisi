@@ -3,6 +3,7 @@ import { collection, onSnapshot } from "firebase/firestore";
 import { useState, useEffect } from "react";
 import useLikes from "../hooks/useLikes";
 import ProductModal from "./ProductModal.jsx";
+import ImageRotator from "./ImageRotator.jsx";
 
 export default function ProductsGrid() {
   const [products, setProducts] = useState([]);
@@ -28,6 +29,10 @@ export default function ProductsGrid() {
       unsubscribeProducts();
     };
   }, []);
+
+  const availableProducts = products.filter((p) => p.available === true);
+
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   // If the URL hash indicates a specific product (e.g. #product-<id>), open that product's modal.
   useEffect(() => {
@@ -57,8 +62,7 @@ export default function ProductsGrid() {
 
   // toggleLike provided by hook
 
-  const availableProducts = products.filter((p) => p.available === true);
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  
 
   return (
     <>
@@ -66,29 +70,23 @@ export default function ProductsGrid() {
         <h2 className="text-3xl font-bold mb-6">Mūsu Produkti - Pieejami</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {availableProducts.map((p) => (
-            <div key={p.id} className="border p-4 rounded">
-              {(() => {
-                const imgSrc =
-                  p.imageURL ||
-                  (p.images && p.images.length ? p.images[0] : null);
-                if (imgSrc) {
-                  return (
-                    <div className="mb-2 w-full aspect-square rounded overflow-hidden">
-                      <img
-                        src={imgSrc}
-                        alt={p.name || "produkt"}
-                        className="w-full h-full object-cover cursor-pointer"
-                        onClick={() => setSelectedProduct(p)}
-                      />
-                    </div>
-                  );
-                }
-                return (
-                  <div className="mb-2 w-full aspect-square bg-gray-100 rounded flex items-center justify-center text-gray-400">
-                    Nav attēla
-                  </div>
-                );
-              })()}
+            <div
+              key={p.id}
+              className="border p-4 rounded"
+              style={{ backgroundColor: 'var(--panel)', color: 'var(--text)', borderColor: 'var(--btn-ghost-border)' }}
+            >
+              <div className="mb-2 w-full aspect-square rounded overflow-hidden">
+                <ImageRotator
+                  images={p.images || (p.imageURL ? [p.imageURL] : [])}
+                  autoRotateInterval={3000}
+                  useClock={true}
+                  pauseOnInteraction={false}
+                  onImageClick={() => setSelectedProduct(p)}
+                  className="w-full h-full"
+                  imgClassName="cursor-pointer"
+                  fallback={<div className="text-gray-400">Nav attēla</div>}
+                />
+              </div>
               <h3 className="text-xl font-semibold">{p.name}</h3>
               <p>{p.description}</p>
               <p className="font-bold mt-2">{p.price} €</p>
@@ -96,9 +94,7 @@ export default function ProductsGrid() {
               {hookUser && (
                 <button
                   onClick={() => toggleLike(p.id)}
-                  className={`mt-2 px-2 py-1 rounded text-white ${
-                    likesMap[p.id] ? "bg-red-500" : "bg-blue-500"
-                  }`}
+                  className={`btn mt-2 ${likesMap[p.id] ? "btn-danger" : "btn-primary"}`}
                 >
                   {likesMap[p.id] ? "Patīk" : "Like"}
                 </button>
