@@ -63,7 +63,7 @@ const ImageRotator = forwardRef(function ImageRotator(
       // check periodically for index change (every 500ms)
       id = setInterval(() => {
         const idx = computeTimeIndex();
-        if (isControlled) {
+            if (isControlled) {
           onChangeCurrent(idx);
         } else {
           setCurrent((prev) => {
@@ -76,7 +76,7 @@ const ImageRotator = forwardRef(function ImageRotator(
               if (!mountedRef.current) return;
               setShowCurrent(true);
             }, 20);
-            if (typeof onIndexChange === 'function') onIndexChange(next);
+            // notify moved to effect to avoid updating parent during render
             return next;
           });
         }
@@ -92,7 +92,7 @@ const ImageRotator = forwardRef(function ImageRotator(
             if (!mountedRef.current) return;
             setShowCurrent(true);
           }, 20);
-          if (typeof onIndexChange === 'function') onIndexChange(next);
+          // notify moved to effect to avoid updating parent during render
           return next;
         });
       }, autoRotateInterval);
@@ -114,10 +114,25 @@ const ImageRotator = forwardRef(function ImageRotator(
       if (!mountedRef.current) return;
       setShowCurrent(true);
     }, 20);
-    if (typeof onIndexChange === 'function') onIndexChange(controlledCurrent);
+    // notification moved to effect below
   }, [controlledCurrent, isControlled]);
 
   const currentIndex = isControlled ? controlledCurrent : current;
+
+  // Notify parent about index changes from a safe lifecycle (effect) to avoid
+  // updating parent state while this component is rendering.
+  useEffect(() => {
+    if (typeof onIndexChange === "function") {
+      try {
+        onIndexChange(currentIndex);
+      } catch (err) {
+        // swallow errors from parent handlers to avoid breaking rotator
+        // (parent may set state; it's fine to run here)
+        // eslint-disable-next-line no-console
+        console.error("onIndexChange handler threw:", err);
+      }
+    }
+  }, [currentIndex, onIndexChange]);
 
   const handleInteraction = (idx) => {
     if (pauseOnInteraction) {
