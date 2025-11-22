@@ -1,3 +1,56 @@
+<!-- Condensed project-specific Copilot instructions for contributors and AI agents -->
+
+# ZanesPuskisi — Copilot Instructions (concise)
+
+Purpose: Short, actionable guidance so an AI coding agent can be productive quickly.
+
+- **Stack:** React (v19) + Vite; Tailwind via `@tailwindcss/vite` in `vite.config.js`.
+- **Backend:** Firebase (Auth, Firestore, Storage). Init in `src/firebase/firebase.js`.
+
+**Quick commands**
+
+- Install: `npm install`
+- Dev: `npm run dev`
+- Build: `npm run build`
+- Preview: `npm run preview`
+- Lint: `npm run lint`
+
+**Start files (read first)**
+
+- `src/firebase/firebase.js` — exports `auth`, `db`, `storage`, `googleProvider`.
+- `src/main.jsx` → `src/App.jsx` (app entry; `src/App.js` is an older copy).
+- `src/hooks/useLikes.js` — likes logic; uses `collectionGroup(db, 'likes')`.
+- `src/components/ProductsGrid.jsx`, `src/components/ProductModal.jsx`, `src/components/CommentsSection.jsx` — core UI flows.
+- `seedFirestore.js` — demo seeding (writes top-level `comments` collection; runtime uses per-product subcollections).
+
+**Critical architecture points**
+
+- Primary model: Firestore `products` collection. Products may include an `images` array and subcollections:
+  - `products/{productId}/likes/{userUid}`
+  - `products/{productId}/comments/{commentId}`
+- Likes are counted via a `collectionGroup('likes')` query — preserve this shape when modifying like code.
+- `ProductModal.jsx` computes storage paths from download URLs (helper `getStoragePathFromUrl`) and schedules background cleanup with `setTimeout` when images are removed — avoid breaking the decoding or timing logic.
+
+**Project conventions & gotchas**
+
+- Mixed `.js` / `.jsx` files. Edit the file actually imported by `src/main.jsx`.
+- Vite uses `@vitejs/plugin-react` and `babel-plugin-react-compiler`; changing Babel/plugins may affect HMR.
+- ESLint permits unused vars matching `^[A-Z_]` (for components/constants).
+- Firebase config is committed in `src/firebase/firebase.js` and used by `seedFirestore.js`. If switching projects, update both.
+
+**Common code patterns (copy-paste)**
+
+- Toggle like: `doc(db, 'products', productId, 'likes', user.uid)` + `setDoc` / `deleteDoc` (see `src/hooks/useLikes.js`).
+- Listen to products: `onSnapshot(collection(db, 'products'), ...)` (see `ProductsGrid.jsx`).
+- Add comment: `addDoc(collection(db, 'products', productId, 'comments'), { message, name, createdAt: serverTimestamp() })` (see `CommentsSection.jsx`).
+
+**When to be careful**
+
+- Keep `likes` as per-product subcollections to maintain `collectionGroup('likes')` listeners.
+- `seedFirestore.js` uses a demo/top-level `comments` collection — do not assume it matches runtime shape.
+
+If you'd like, I can expand this into a longer `AGENT.md` with a short migration checklist, small code snippets to run locally, and suggested tests. Tell me what to add or which section to clarify.
+
 <!-- Project-specific Copilot instructions for contributors and AI agents -->
 
 # ZanesPuskisi — Copilot Instructions (concise)
