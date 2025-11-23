@@ -91,9 +91,19 @@ export default function Navbar({ user }) {
 
   return (
     <header className="" style={{ backgroundColor: 'var(--panel)', color: 'var(--text)' }}>
-      <div className="p-3 flex items-center justify-between max-w-6xl mx-auto">
+      <div className="py-6 px-3 flex items-center justify-between max-w-6xl mx-auto">
         <a href="/" className="flex items-center" aria-label="Home">
-          <span className="header-logo">Zanes Pušķīši</span>
+          <span
+            className="header-logo"
+            style={{
+              fontSize: '40px',
+              lineHeight: '1.2',
+              display: 'inline-block',
+              paddingTop: '4px'
+            }}
+          >
+            Zanes Pušķīši
+          </span>
         </a>
 
         {/* Center navigation: visible on md and larger */}

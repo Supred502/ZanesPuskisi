@@ -200,7 +200,7 @@ function AdminPanelInner({ user }) {
               </div>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex flex-wrap items-stretch gap-2 mt-2">
               <input
                 ref={fileInputRef}
                 onChange={handleFileInput}
@@ -209,39 +209,47 @@ function AdminPanelInner({ user }) {
                 accept="image/*"
                 className="hidden"
               />
+
+              {/* Add Image */}
               <button
                 type="button"
                 onClick={() => {
                   setReplaceIndex(null);
                   fileInputRef.current.click();
                 }}
-                className="px-4 py-2 rounded bg-green-200 text-green-800"
+                className="grow shrink basis-[calc(25%-0.5rem)] min-w-[120px] px-2 py-2 rounded bg-green-200 text-green-800 text-center text-sm wrap-break-word h-16 md:h-[61px]"
               >
                 Pievienot attēlu
               </button>
+
               {images.length > 0 && (
                 <>
+                  {/* Replace Image */}
                   <button
                     type="button"
                     onClick={() => {
                       setReplaceIndex(current);
                       fileInputRef.current.click();
                     }}
-                    className="px-4 py-2 rounded bg-yellow-100 text-yellow-800"
+                    className="grow shrink basis-[calc(25%-0.5rem)] min-w-[120px] px-2 py-2 rounded bg-yellow-100 text-yellow-800 text-center text-sm wrap-break-word h-16 md:h-[61px]"
                   >
                     Mainīt attēlu
                   </button>
+
+                  {/* Remove Current Image */}
                   <button
                     type="button"
                     onClick={() => removeImage(current)}
-                    className="px-4 py-2 rounded bg-red-100 text-red-700"
+                    className="grow shrink basis-[calc(25%-0.5rem)] min-w-[120px] px-2 py-2 rounded bg-red-100 text-red-700 text-center text-sm wrap-break-word h-16 md:h-[61px]"
                   >
                     Noņemt attēlu
                   </button>
+
+                  {/* Remove All */}
                   <button
                     type="button"
                     onClick={() => setImages([])}
-                    className="px-4 py-2 rounded bg-gray-100 text-gray-800"
+                    className="grow shrink basis-[calc(25%-0.5rem)] min-w-[120px] px-2 py-2 rounded bg-gray-100 text-gray-800 text-center text-sm wrap-break-word h-16 md:h-[61px]"
                   >
                     Noņemt visus
                   </button>
@@ -316,8 +324,8 @@ function AdminPanelInner({ user }) {
               />
             </div>
 
-            <div className="mt-4 flex items-center gap-6">
-              <div className="flex items-center gap-2">
+            <div className="mt-4 flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6">
+              <div className="flex items-center gap-2 w-full md:w-auto">
                 <label className="text-sm">Pieejams</label>
                 <button
                   type="button"
@@ -339,7 +347,7 @@ function AdminPanelInner({ user }) {
                 </span>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 w-full md:w-auto">
                 <label className="text-sm">Svētku piedāvājums</label>
                 <button
                   type="button"
