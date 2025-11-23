@@ -322,16 +322,16 @@ function AdminPanelInner({ user }) {
                 <button
                   type="button"
                   onClick={() => setAvailable((v) => !v)}
-                  className={`w-12 h-6 rounded-full p-0.5`}
+                  className={`switch switch--default`}
                   style={{
-                    background: available ? 'var(--badge-available-bg)' : 'transparent',
-                    border: '1px solid var(--btn-ghost-border)'
+                    background: available ? 'var(--badge-available-bg)' : 'transparent'
                   }}
+                  aria-pressed={available}
                 >
                   <div
-                    className={`bg-white w-5 h-5 rounded-full transition-transform ${
-                      available ? "translate-x-6" : "translate-x-0"
-                    }`}
+                    className="knob"
+                    style={{ transform: available ? 'translateX(20px)' : 'translateX(0)' }}
+                    aria-hidden
                   />
                 </button>
                 <span className={`ml-2 px-2 py-1 rounded badge ${available ? 'badge-available' : 'badge-unavailable'}`}>
@@ -341,13 +341,20 @@ function AdminPanelInner({ user }) {
 
               <div className="flex items-center gap-2">
                 <label className="text-sm">Svētku piedāvājums</label>
-                <input
-                  type="checkbox"
-                  checked={holiday}
-                  onChange={(e) => setHoliday(e.target.checked)}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm text-gray-600">
+                <button
+                  type="button"
+                  onClick={() => setHoliday((v) => !v)}
+                  className={`switch switch--default`}
+                  style={{ background: holiday ? 'var(--badge-holiday-bg)' : 'transparent' }}
+                  aria-pressed={holiday}
+                >
+                  <div
+                    className="knob"
+                    style={{ transform: holiday ? 'translateX(20px)' : 'translateX(0)' }}
+                    aria-hidden
+                  />
+                </button>
+                <span className={`ml-2 px-2 py-1 rounded badge ${holiday ? 'badge-holiday' : 'badge-unavailable'}`}>
                   {holiday ? "Jā" : "Nē"}
                 </span>
               </div>

@@ -360,3 +360,43 @@ button:focus-visible {
 .theme-dark .btn-ghost-bright {
   color: rgba(255, 255, 255, 0.96);
 }
+
+/* Small reusable switch styles used across admin/modal UIs */
+.switch {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 0.25rem;
+  cursor: pointer;
+  border: 1px solid var(--btn-ghost-border);
+}
+.switch--default {
+  width: 3rem;
+  height: 1.5rem;
+}
+.switch--small {
+  width: 2.5rem;
+  height: 1.25rem;
+}
+.switch .knob {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 9999px;
+  background: #ffffff;
+  box-shadow: 0 6px 10px rgba(2, 6, 23, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  transition: transform 180ms ease-in-out;
+  transform: translateX(0);
+}
+.switch--small .knob {
+  width: 1rem;
+  height: 1rem;
+}
+.theme-dark .switch .knob {
+  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+}
+.theme-light .switch .knob {
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 6px 12px rgba(2, 6, 23, 0.06);
+}

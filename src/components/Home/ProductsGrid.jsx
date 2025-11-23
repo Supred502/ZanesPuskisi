@@ -103,6 +103,11 @@ export default function ProductsGrid({ maxRows } = {}) {
               <h3 className="text-xl font-semibold">{p.name}</h3>
               <p>{p.description}</p>
               <p className="font-bold mt-2">{p.price} €</p>
+              <div className="mt-2 flex gap-2">
+                {p.holidaySpecial && (
+                  <span className="px-2 py-1 rounded badge badge-holiday">Svētku piedāvājums</span>
+                )}
+              </div>
 
               {hookUser && (
                 <button

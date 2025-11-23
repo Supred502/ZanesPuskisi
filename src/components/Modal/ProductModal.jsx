@@ -533,22 +533,37 @@ export default function ProductModal({ product, user, onClose, startIndex = 0 })
                   className="w-full border rounded px-3 py-2"
                 />
                 <div className="flex items-center gap-4">
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={available}
-                      onChange={(e) => setAvailable(e.target.checked)}
-                    />{" "}
-                    Pieejams
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={holiday}
-                      onChange={(e) => setHoliday(e.target.checked)}
-                    />{" "}
-                    Svētku piedāvājums
-                  </label>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm">Pieejams</label>
+                    <button
+                      type="button"
+                      onClick={() => setAvailable((v) => !v)}
+                      className={`switch switch--default`}
+                      style={{ background: available ? 'var(--badge-available-bg)' : 'transparent' }}
+                      aria-pressed={available}
+                    >
+                      <div className="knob" style={{ transform: available ? 'translateX(20px)' : 'translateX(0)' }} aria-hidden />
+                    </button>
+                    <span className={`ml-2 px-2 py-1 rounded badge ${available ? 'badge-holiday' : 'badge-unavailable'}`}>
+                      {available ? "Jā" : "Nē"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm">Svētku piedāvājums</label>
+                    <button
+                      type="button"
+                      onClick={() => setHoliday((v) => !v)}
+                      className={`switch switch--default`}
+                      style={{ background: holiday ? 'var(--badge-holiday-bg)' : 'transparent' }}
+                      aria-pressed={holiday}
+                    >
+                      <div className="knob" style={{ transform: holiday ? 'translateX(20px)' : 'translateX(0)' }} aria-hidden />
+                    </button>
+                    <span className={`ml-2 px-2 py-1 rounded badge ${holiday ? 'badge-holiday' : 'badge-unavailable'}`}>
+                      {holiday ? "Jā" : "Nē"}
+                    </span>
+                  </div>
                 </div>
                     <div className="flex gap-2 items-center">
                   <div className="flex gap-2">
