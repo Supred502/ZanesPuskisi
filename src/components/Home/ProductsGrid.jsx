@@ -5,7 +5,7 @@ import useLikes from "../../hooks/useLikes.js";
 import ProductModal from "../Modal/ProductModal.jsx";
 import ImageRotator from "../ImageRotator.jsx";
 
-export default function ProductsGrid() {
+export default function ProductsGrid({ maxRows } = {}) {
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
@@ -32,6 +32,23 @@ export default function ProductsGrid() {
 
   const availableProducts = products.filter((p) => p.available === true);
 
+  // Track window width (used only if maxRows is provided)
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1200
+  );
+
+  useEffect(() => {
+    function onResize() {
+      setWindowWidth(window.innerWidth);
+    }
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const columns = windowWidth >= 1024 ? 4 : windowWidth >= 768 ? 3 : windowWidth >= 640 ? 2 : 1;
+  const visibleCount = maxRows ? columns * maxRows : availableProducts.length;
+  const visibleProducts = availableProducts.slice(0, visibleCount);
+
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   // If the URL hash indicates a specific product (e.g. #product-<id>), open that product's modal.
@@ -57,19 +74,15 @@ export default function ProductsGrid() {
   }, [products]);
 
   // useLikes hook provides likesMap, likesCount, toggleLike and user
-  const { likesMap, likesCount, toggleLike, user: hookUser } =
-    useLikes(products);
-
-  // toggleLike provided by hook
-
-  
+  // useLikes hook provides likesMap, likesCount, toggleLike and user
+  const { likesMap, likesCount, toggleLike, user: hookUser } = useLikes(products);
 
   return (
     <>
       <section id="produkti" className="p-8">
         <h2 className="text-3xl font-bold mb-6">Mūsu Produkti - Pieejami</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {availableProducts.map((p) => (
+          {visibleProducts.map((p) => (
             <div
               key={p.id}
               className="border p-4 rounded"
@@ -104,6 +117,24 @@ export default function ProductsGrid() {
             </div>
           ))}
         </div>
+        {maxRows && availableProducts.length > visibleCount && (
+          <div className="mt-6">
+            <button
+              type="button"
+              className="w-full py-3 rounded text-lg bg-gray-200 text-gray-700 hover:bg-gray-300"
+              onClick={(e) => {
+                e.preventDefault();
+                try {
+                  window.location.assign("/produkti");
+                } catch {
+                  window.location.href = "/produkti";
+                }
+              }}
+            >
+              Parādīt visus produktus
+            </button>
+          </div>
+        )}
       </section>
       {selectedProduct && (
         <ProductModal

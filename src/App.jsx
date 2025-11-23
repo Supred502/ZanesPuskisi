@@ -52,8 +52,8 @@ function App() {
       <Navbar user={user} />
       <Hero />
       <AdminPanel user={user} />
-      <ProductsGrid />
-      <InspirationsGrid />
+      <ProductsGrid maxRows={3} />
+      <InspirationsGrid maxRows={3} />
     </div>
   );
 }
