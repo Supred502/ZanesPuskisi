@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 // Use the application entry that assembles Navbar, ProductsGrid, AdminPanel, etc.
 import App from "./App.jsx";
+import RotationProvider from "./contexts/RotationContext";
 
 // Initialize theme from localStorage. If the user has a saved preference,
 // apply it by adding a class to document.documentElement (`theme-light` or
@@ -23,6 +24,8 @@ try {
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <App />
+    <RotationProvider interval={3000}>
+      <App />
+    </RotationProvider>
   </StrictMode>
 );

@@ -32,7 +32,7 @@ export default function InspirationsGrid() {
                 autoRotateInterval={3000}
                 useClock={true}
                 pauseOnInteraction={false}
-                onImageClick={() => setSelectedProduct(p)}
+                onImageClick={(i) => setSelectedProduct({ product: p, index: i ?? 0 })}
                 className="w-full h-full"
                 imgClassName="cursor-pointer"
                 fallback={<div className="text-gray-400">Nav attēla</div>}
@@ -45,7 +45,8 @@ export default function InspirationsGrid() {
       </div>
       {selectedProduct && (
         <ProductModal
-          product={selectedProduct}
+          product={selectedProduct.product || selectedProduct}
+          startIndex={selectedProduct.index ?? 0}
           user={auth.currentUser}
           onClose={() => setSelectedProduct(null)}
         />

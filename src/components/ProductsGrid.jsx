@@ -42,7 +42,7 @@ export default function ProductsGrid() {
         const id = h.replace("#product-", "");
         const found = products.find((p) => p.id === id);
         if (found) {
-          setSelectedProduct(found);
+          setSelectedProduct({ product: found, index: 0 });
         }
       }
     }
@@ -81,7 +81,7 @@ export default function ProductsGrid() {
                   autoRotateInterval={3000}
                   useClock={true}
                   pauseOnInteraction={false}
-                  onImageClick={() => setSelectedProduct(p)}
+                  onImageClick={(i) => setSelectedProduct({ product: p, index: i ?? 0 })}
                   className="w-full h-full"
                   imgClassName="cursor-pointer"
                   fallback={<div className="text-gray-400">Nav attēla</div>}
@@ -107,7 +107,8 @@ export default function ProductsGrid() {
       </section>
       {selectedProduct && (
         <ProductModal
-          product={selectedProduct}
+          product={selectedProduct.product || selectedProduct}
+          startIndex={selectedProduct.index ?? 0}
           user={hookUser}
           onClose={() => {
             setSelectedProduct(null);

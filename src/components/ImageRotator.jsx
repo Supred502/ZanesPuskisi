@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useRef, forwardRef, useImperativeHandle } from "react";
+import React, { useEffect, useState, useRef, forwardRef, useImperativeHandle, useContext } from "react";
+import { RotationContext } from "../contexts/RotationContext";
 
 export default forwardRef(function ImageRotator({
   images = [],
@@ -10,6 +11,7 @@ export default forwardRef(function ImageRotator({
   pauseOnInteraction = false,
   pause: externalPause,
   setPause: externalSetPause,
+  useClock = false,
   ...rest
 }, ref) {
   const imageCount = images.length;
@@ -31,14 +33,32 @@ export default forwardRef(function ImageRotator({
   const paused = typeof externalPause === "boolean" ? externalPause : internalPaused;
   const setPausedLocal = typeof externalSetPause === "function" ? externalSetPause : setInternalPaused;
 
-  // 🔥 Rotate WITHOUT unmounting images
+  const rotation = useContext(RotationContext);
+
+  // Rotation behavior:
+  // - If `useClock` is true, listen to the shared rotation tick and advance
+  //   in sync with other rotators. This keeps modal and grid in-step.
+  // - Otherwise, fall back to local interval behavior.
   useEffect(() => {
+    if (useClock) return; // global clock handled separately
     if (imageCount < 2 || paused) return;
     const id = setInterval(() => {
       setCurrent((c) => (c + 1) % imageCount);
     }, autoRotateInterval);
     return () => clearInterval(id);
-  }, [imageCount, autoRotateInterval, paused]);
+  }, [imageCount, autoRotateInterval, paused, useClock]);
+
+  // Respond to shared rotation tick when `useClock` is enabled.
+  useEffect(() => {
+    if (!useClock) return;
+    if (!rotation) return;
+    // advance when the global tick changes, unless paused or not enough images
+    if (imageCount < 2 || paused) return;
+    // schedule update async to avoid sync state update inside effect
+    const t = setTimeout(() => setCurrent((c) => (c + 1) % imageCount), 0);
+    return () => clearTimeout(t);
+    // run whenever rotation.tick changes (dependency below)
+  }, [rotation, rotation?.tick, imageCount, paused, useClock]);
 
   // notify parent when index changes
   useEffect(() => {

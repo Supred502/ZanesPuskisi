@@ -18,7 +18,7 @@ import { storage } from "../firebase/firebase";
 import CommentsSection from "./CommentsSection.jsx";
 import ImageRotator from "./ImageRotator.jsx";
 
-export default function ProductModal({ product, user, onClose }) {
+export default function ProductModal({ product, user, onClose, startIndex = 0 }) {
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -36,6 +36,17 @@ export default function ProductModal({ product, user, onClose }) {
 
   // pendingConfirm: null or { type: 'single'|'all', idx?: number }
   const rotatorRef = useRef(null);
+
+  // When modal opens, ensure the rotator shows the image that was clicked
+  // in the grid. We set the rotator's current index imperatively on mount.
+  React.useEffect(() => {
+    if (rotatorRef.current && typeof rotatorRef.current.setCurrent === "function") {
+      rotatorRef.current.setCurrent(startIndex || 0);
+    }
+    // ensure modal-local pause is reset on open (user interactions pause only modal)
+    setIsPaused(false);
+    setCurrent(startIndex || 0);
+  }, [startIndex]);
 
   if (!product) return null;
 
