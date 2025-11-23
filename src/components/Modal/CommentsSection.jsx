@@ -7,7 +7,7 @@ import {
   onSnapshot,
   serverTimestamp,
 } from "firebase/firestore";
-import { db, auth, googleProvider } from "../firebase/firebase";
+import { db, auth, googleProvider } from "../../firebase/firebase.js";
 import { signInWithPopup } from "firebase/auth";
 
 export default function CommentsSection({ productId }) {

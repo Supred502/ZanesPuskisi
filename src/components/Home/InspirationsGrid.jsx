@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
-import { db, auth } from "../firebase/firebase";
-import ProductModal from "./ProductModal.jsx";
-import ImageRotator from "./ImageRotator.jsx";
+import { db, auth } from "../../firebase/firebase.js";
+import ProductModal from "../Modal/ProductModal.jsx";
+import ImageRotator from "../ImageRotator.jsx";
 
 export default function InspirationsGrid() {
   const [sold, setSold] = useState([]);

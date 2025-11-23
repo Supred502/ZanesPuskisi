@@ -5,7 +5,7 @@ import {
   uploadBytes,
   getDownloadURL,
 } from "firebase/storage";
-import { db, storage } from "../firebase/firebase";
+import { db, storage } from "../../firebase/firebase";
 
 function AdminPanelInner({ user }) {
   const [images, setImages] = useState([]); // { file, url }

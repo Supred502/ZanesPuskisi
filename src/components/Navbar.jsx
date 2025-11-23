@@ -87,24 +87,7 @@ export default function Navbar({ user }) {
     }
   };
 
-  const scrollToId = (id, e) => {
-    if (e) e.preventDefault();
-    const el = document.getElementById(id);
-    if (!el) {
-      // fallback: update hash
-      window.location.hash = id;
-      return;
-    }
-    const header = document.querySelector("header");
-    const offset = header ? header.offsetHeight : 0;
-    const top = el.getBoundingClientRect().top + window.scrollY - offset - 8;
-    window.scrollTo({ top, behavior: "smooth" });
-    try {
-      window.history.replaceState(null, "", `#${id}`);
-    } catch {
-      // ignore errors from history.replaceState (best-effort)
-    }
-  };
+  
 
   return (
     <header className="" style={{ backgroundColor: 'var(--panel)', color: 'var(--text)' }}>
@@ -115,17 +98,61 @@ export default function Navbar({ user }) {
 
         {/* Center navigation: visible on md and larger */}
         <nav className="hidden md:flex gap-6" aria-label="Main navigation">
-          <a href="#produkti" className="font-medium" onClick={(e) => scrollToId("produkti", e)}>Produkti</a>
-          <a href="#idejas" className="font-medium" onClick={(e) => scrollToId("idejas", e)}>Iedvesma</a>
           <a
-            href="/comments"
+            href="/"
             className="font-medium"
             onClick={(e) => {
               e.preventDefault();
               try {
-                window.location.assign("/comments");
+                window.location.assign("/");
               } catch {
-                window.location.href = "/comments";
+                window.location.href = "/";
+              }
+            }}
+          >
+            Sākums
+          </a>
+          <a
+            href="/produkti"
+            className="font-medium"
+            onClick={(e) => {
+              e.preventDefault();
+              try {
+                window.location.assign("/produkti");
+              } catch {
+                window.location.href = "/produkti";
+              }
+            }}
+          >
+            Produkti
+          </a>
+          <a
+            href="/iedvesma"
+            className="font-medium"
+            onClick={(e) => {
+              e.preventDefault();
+              try {
+                window.location.assign("/iedvesma");
+              } catch {
+                window.location.href = "/iedvesma";
+              }
+            }}
+          >
+            Iedvesma
+          </a>
+          <a
+            href="/komentari"
+            className="font-medium"
+            onClick={(e) => {
+              e.preventDefault();
+              try {
+                window.location.assign("/komentari");
+              } catch {
+                try {
+                  window.location.assign("/comments");
+                } catch {
+                  window.location.href = "/comments";
+                }
               }
             }}
           >
@@ -162,9 +189,10 @@ export default function Navbar({ user }) {
                 style={{ backgroundColor: 'var(--panel)', border: '1px solid var(--btn-ghost-border)', color: 'var(--text)' }}
               >
                 <div className="py-1">
-                  <button role="menuitem" className="w-full text-left px-3 py-2" onClick={(e) => { setMoreOpen(false); scrollToId('produkti', e); }}>Produkti</button>
-                  <button role="menuitem" className="w-full text-left px-3 py-2" onClick={(e) => { setMoreOpen(false); scrollToId('idejas', e); }}>Iedvesma</button>
-                  <button role="menuitem" className="w-full text-left px-3 py-2" onClick={(e) => { setMoreOpen(false); e.preventDefault(); try { window.location.assign('/comments'); } catch { window.location.href = '/comments'; } }}>Komentāri</button>
+                  <button role="menuitem" className="w-full text-left px-3 py-2" onClick={(e) => { setMoreOpen(false); e.preventDefault(); try { window.location.assign('/'); } catch { window.location.href = '/'; } }}>Sākums</button>
+                  <button role="menuitem" className="w-full text-left px-3 py-2" onClick={(e) => { setMoreOpen(false); e.preventDefault(); try { window.location.assign('/produkti'); } catch { window.location.href = '/produkti'; } }}>Produkti</button>
+                  <button role="menuitem" className="w-full text-left px-3 py-2" onClick={(e) => { setMoreOpen(false); e.preventDefault(); try { window.location.assign('/iedvesma'); } catch { window.location.href = '/iedvesma'; } }}>Iedvesma</button>
+                  <button role="menuitem" className="w-full text-left px-3 py-2" onClick={(e) => { setMoreOpen(false); e.preventDefault(); try { window.location.assign('/komentari'); } catch { window.location.href = '/komentari'; } }}>Komentāri</button>
                 </div>
               </div>
             )}

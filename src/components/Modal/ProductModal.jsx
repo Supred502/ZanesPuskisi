@@ -7,16 +7,16 @@ import {
   getDocs,
   query,
 } from "firebase/firestore";
-import { db } from "../firebase/firebase";
+import { db } from "../../firebase/firebase.js";
 import {
   ref as storageRef,
   uploadBytes,
   getDownloadURL,
   deleteObject,
 } from "firebase/storage";
-import { storage } from "../firebase/firebase";
+import { storage } from "../../firebase/firebase.js";
 import CommentsSection from "./CommentsSection.jsx";
-import ImageRotator from "./ImageRotator.jsx";
+import ImageRotator from "../ImageRotator.jsx";
 
 export default function ProductModal({ product, user, onClose, startIndex = 0 }) {
   const [current, setCurrent] = useState(0);

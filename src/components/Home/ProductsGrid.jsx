@@ -1,9 +1,9 @@
-import { db } from "../firebase/firebase";
+import { db } from "../../firebase/firebase.js";
 import { collection, onSnapshot } from "firebase/firestore";
 import { useState, useEffect } from "react";
-import useLikes from "../hooks/useLikes";
-import ProductModal from "./ProductModal.jsx";
-import ImageRotator from "./ImageRotator.jsx";
+import useLikes from "../../hooks/useLikes.js";
+import ProductModal from "../Modal/ProductModal.jsx";
+import ImageRotator from "../ImageRotator.jsx";
 
 export default function ProductsGrid() {
   const [products, setProducts] = useState([]);
