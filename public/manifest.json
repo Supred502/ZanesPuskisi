@@ -1,0 +1,20 @@
+{
+  "name": "Zanes Pušķīši",
+  "short_name": "Zanes",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#10b981",
+  "icons": [
+    {
+      "src": "/Zanes_Puskisi_Logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/Zanes_Puskisi_Logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
