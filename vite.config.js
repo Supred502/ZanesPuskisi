@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import { VitePWA } from "vite-plugin-pwa";
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -11,6 +12,42 @@ export default defineConfig({
       },
     }),
     tailwindcss(),
+    VitePWA({
+      registerType: "autoUpdate",
+      includeAssets: ["favicon.ico", "robots.txt", "apple-touch-icon.png"],
+      manifest: {
+        name: "Zanes Puskisi",
+        short_name: "Puskisi",
+        theme_color: "#111827",
+        start_url: "/",
+        display: "standalone",
+        background_color: "#111827",
+        icons: [
+          { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+          { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+        ],
+      },
+      workbox: {
+        // Important: allow /s/* and /share/* to hit the network.
+        // These routes are handled by a Cloud Function to provide OG previews + redirects.
+        // If the SW serves index.html for them, the modal deep-link can't work reliably.
+        navigateFallbackDenylist: [/^\/s\//, /^\/share\//],
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) =>
+              url.origin === "https://firebasestorage.googleapis.com" ||
+              url.origin === "https://storage.googleapis.com" ||
+              url.hostname.endsWith(".firebasestorage.app"),
+            handler: "CacheFirst",
+            options: {
+              cacheName: "firebase-storage-images",
+              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
+      },
+    }),
   ],
   build: {
     // Keep chunk sizes smaller by extracting large node_modules into separate chunks.

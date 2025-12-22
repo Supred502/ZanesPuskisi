@@ -161,7 +161,7 @@ function AdminPanelInner({ user }) {
             <div className="rounded-lg p-4 shadow-inner" style={{ backgroundColor: 'var(--panel)' }}>
               <div className="w-full aspect-square">
                 {images.length === 0 ? (
-                  <div className="w-full h-full rounded-md" style={{ backgroundColor: 'rgba(255,255,255,0.02)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)' }}>
+                  <div className="w-full h-full rounded-md" style={{ backgroundColor: 'var(--btn-ghost-hover-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', border: '1px solid var(--btn-ghost-border)' }}>
                     Produkta priekšskatījums
                   </div>
                 ) : (
@@ -180,7 +180,8 @@ function AdminPanelInner({ user }) {
                               (c) => (c - 1 + images.length) % images.length
                             )
                           }
-                          className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-2"
+                          className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full p-2"
+                          style={{ backgroundColor: 'var(--panel)', border: '1px solid var(--btn-ghost-border)', color: 'var(--text)' }}
                         >
                           ‹
                         </button>
@@ -189,7 +190,8 @@ function AdminPanelInner({ user }) {
                           onClick={() =>
                             setCurrent((c) => (c + 1) % images.length)
                           }
-                          className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-2"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-2"
+                          style={{ backgroundColor: 'var(--panel)', border: '1px solid var(--btn-ghost-border)', color: 'var(--text)' }}
                         >
                           ›
                         </button>
@@ -217,7 +219,7 @@ function AdminPanelInner({ user }) {
                   setReplaceIndex(null);
                   fileInputRef.current.click();
                 }}
-                className="grow shrink basis-[calc(25%-0.5rem)] min-w-[120px] px-2 py-2 rounded bg-green-200 text-green-800 text-center text-sm wrap-break-word h-16 md:h-[61px]"
+                className="btn btn-success grow shrink basis-[calc(25%-0.5rem)] min-w-[120px] text-center text-sm wrap-break-word h-16 md:h-[61px]"
               >
                 Pievienot attēlu
               </button>
@@ -231,7 +233,7 @@ function AdminPanelInner({ user }) {
                       setReplaceIndex(current);
                       fileInputRef.current.click();
                     }}
-                    className="grow shrink basis-[calc(25%-0.5rem)] min-w-[120px] px-2 py-2 rounded bg-yellow-100 text-yellow-800 text-center text-sm wrap-break-word h-16 md:h-[61px]"
+                    className="btn btn-warning grow shrink basis-[calc(25%-0.5rem)] min-w-[120px] text-center text-sm wrap-break-word h-16 md:h-[61px]"
                   >
                     Mainīt attēlu
                   </button>
@@ -240,7 +242,7 @@ function AdminPanelInner({ user }) {
                   <button
                     type="button"
                     onClick={() => removeImage(current)}
-                    className="grow shrink basis-[calc(25%-0.5rem)] min-w-[120px] px-2 py-2 rounded bg-red-100 text-red-700 text-center text-sm wrap-break-word h-16 md:h-[61px]"
+                    className="btn btn-danger grow shrink basis-[calc(25%-0.5rem)] min-w-[120px] text-center text-sm wrap-break-word h-16 md:h-[61px]"
                   >
                     Noņemt attēlu
                   </button>
@@ -249,7 +251,7 @@ function AdminPanelInner({ user }) {
                   <button
                     type="button"
                     onClick={() => setImages([])}
-                    className="grow shrink basis-[calc(25%-0.5rem)] min-w-[120px] px-2 py-2 rounded bg-gray-100 text-gray-800 text-center text-sm wrap-break-word h-16 md:h-[61px]"
+                    className="btn btn-neutral grow shrink basis-[calc(25%-0.5rem)] min-w-[120px] text-center text-sm wrap-break-word h-16 md:h-[61px]"
                   >
                     Noņemt visus
                   </button>
@@ -275,7 +277,8 @@ function AdminPanelInner({ user }) {
                     <button
                       type="button"
                       onClick={() => removeImage(i)}
-                      className="text-xs w-full bg-white/70"
+                      className="text-xs w-full"
+                      style={{ backgroundColor: 'var(--panel)', borderTop: '1px solid var(--btn-ghost-border)', color: 'var(--text)' }}
                     >
                       Noņemt
                     </button>
@@ -289,18 +292,19 @@ function AdminPanelInner({ user }) {
           <div className="md:col-span-2">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="col-span-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--muted)' }}>
                   Nosaukums
                 </label>
                 <input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="w-full border rounded px-3 py-2"
+                  style={{ borderColor: 'var(--btn-ghost-border)', backgroundColor: 'transparent', color: 'var(--text)' }}
                 />
               </div>
 
               <div className="col-span-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--muted)' }}>
                   Cena (€)
                 </label>
                 <input
@@ -308,12 +312,13 @@ function AdminPanelInner({ user }) {
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
                   className="w-full border rounded px-3 py-2"
+                  style={{ borderColor: 'var(--btn-ghost-border)', backgroundColor: 'transparent', color: 'var(--text)' }}
                 />
               </div>
             </div>
 
             <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--muted)' }}>
                 Apraksts
               </label>
               <textarea
@@ -321,27 +326,22 @@ function AdminPanelInner({ user }) {
                 onChange={(e) => setDescription(e.target.value)}
                 rows={5}
                 className="w-full border rounded px-3 py-2"
+                style={{ borderColor: 'var(--btn-ghost-border)', backgroundColor: 'transparent', color: 'var(--text)' }}
               />
             </div>
 
             <div className="mt-4 flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6">
               <div className="flex items-center gap-2 w-full md:w-auto">
                 <label className="text-sm">Pieejams</label>
-                <button
-                  type="button"
-                  onClick={() => setAvailable((v) => !v)}
-                  className={`switch switch--default`}
-                  style={{
-                    background: available ? 'var(--badge-available-bg)' : 'transparent'
-                  }}
-                  aria-pressed={available}
-                >
-                  <div
-                    className="knob"
-                    style={{ transform: available ? 'translateX(20px)' : 'translateX(0)' }}
-                    aria-hidden
-                  />
-                </button>
+                 <button
+                   type="button"
+                   onClick={() => setAvailable((v) => !v)}
+                   className={`switch switch--small`}
+                   style={{ background: available ? 'var(--badge-available-bg)' : 'transparent' }}
+                   aria-pressed={available}
+                 >
+                   <div className="knob" aria-hidden/>
+                 </button>
                 <span className={`ml-2 px-2 py-1 rounded badge ${available ? 'badge-available' : 'badge-unavailable'}`}>
                   {available ? "Pieejams" : "Pārdots"}
                 </span>
@@ -349,19 +349,15 @@ function AdminPanelInner({ user }) {
 
               <div className="flex items-center gap-2 w-full md:w-auto">
                 <label className="text-sm">Svētku piedāvājums</label>
-                <button
-                  type="button"
-                  onClick={() => setHoliday((v) => !v)}
-                  className={`switch switch--default`}
-                  style={{ background: holiday ? 'var(--badge-holiday-bg)' : 'transparent' }}
-                  aria-pressed={holiday}
-                >
-                  <div
-                    className="knob"
-                    style={{ transform: holiday ? 'translateX(20px)' : 'translateX(0)' }}
-                    aria-hidden
-                  />
-                </button>
+                 <button
+                   type="button"
+                   onClick={() => setHoliday((v) => !v)}
+                   className={`switch switch--small`}
+                   style={{ background: holiday ? 'var(--badge-holiday-bg)' : 'transparent' }}
+                   aria-pressed={holiday}
+                 >
+                   <div className="knob" aria-hidden/>
+                 </button>
                 <span className={`ml-2 px-2 py-1 rounded badge ${holiday ? 'badge-holiday' : 'badge-unavailable'}`}>
                   {holiday ? "Jā" : "Nē"}
                 </span>
@@ -369,7 +365,7 @@ function AdminPanelInner({ user }) {
             </div>
 
             <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--muted)' }}>
                 TikTok saite (pēc izvēles)
               </label>
               <input
@@ -378,6 +374,7 @@ function AdminPanelInner({ user }) {
                 onChange={(e) => setTiktok(e.target.value)}
                 className="w-full border rounded px-3 py-2"
                 placeholder="https://"
+                style={{ borderColor: 'var(--btn-ghost-border)', backgroundColor: 'transparent', color: 'var(--text)' }}
               />
             </div>
           </div>
@@ -389,7 +386,7 @@ function AdminPanelInner({ user }) {
                 type="submit"
                 disabled={disabled}
                 aria-disabled={disabled}
-                className={`w-full py-3 rounded text-lg ${!disabled ? 'btn-primary' : 'bg-gray-200 text-gray-600 cursor-not-allowed'}`}
+                className={`w-full py-3 rounded text-lg btn btn-primary ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
               >
                 Pievienot produktu
               </button>

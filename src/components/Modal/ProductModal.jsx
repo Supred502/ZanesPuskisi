@@ -3,9 +3,9 @@ import {
   doc,
   updateDoc,
   deleteDoc,
+  addDoc,
   collection,
-  getDocs,
-  query,
+  serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../../firebase/firebase.js";
 import {
@@ -15,10 +15,22 @@ import {
   deleteObject,
 } from "firebase/storage";
 import { storage } from "../../firebase/firebase.js";
-import CommentsSection from "./CommentsSection.jsx";
 import ImageRotator from "../ImageRotator.jsx";
+import useWishlist from "../../hooks/useWishlist.js";
+import { signInWithPopup } from "firebase/auth";
+import { auth, googleProvider } from "../../firebase/firebase.js";
+import normalizeFirebaseStorageUrl from "../../utils/normalizeFirebaseStorageUrl";
+import { openWhatsApp } from "../../utils/whatsapp";
 
-export default function ProductModal({ product, user, onClose, startIndex = 0 }) {
+function buildShareLink(productId) {
+  try {
+    return `${window.location.origin}/s/${productId}`;
+  } catch {
+    return `/s/${productId}`;
+  }
+}
+
+export default function ProductModal({ product, user, onClose, startIndex = 0, onProductUpdated }) {
   const [current, setCurrent] = useState(startIndex || 0);
   const [isPaused, setIsPaused] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -31,6 +43,13 @@ export default function ProductModal({ product, user, onClose, startIndex = 0 })
   const [images, setImages] = useState(product?.images || []);
   const [saving, setSaving] = useState(false);
   const [pendingConfirm, setPendingConfirm] = useState(null);
+
+  const wishlist = useWishlist(user);
+
+  const [requestName, setRequestName] = useState("");
+  const [requestMsg, setRequestMsg] = useState("");
+  const [requestSubmitting, setRequestSubmitting] = useState(false);
+  const [requestStatus, setRequestStatus] = useState(null);
 
   const fileRef = useRef(null);
   const addRef = useRef(null);
@@ -59,12 +78,79 @@ export default function ProductModal({ product, user, onClose, startIndex = 0 })
 
   // Ensure rotator shows clicked image
   useEffect(() => {
+    // Modal typically mounts per product selection; keep this effect limited to
+    // syncing the rotator ref (avoid setState-in-effect lint).
     if (rotatorRef.current?.setCurrent) rotatorRef.current.setCurrent(startIndex || 0);
-    setCurrent(startIndex || 0);
-    setIsPaused(false);
   }, [startIndex]);
 
+  // Keep local editable state in sync when switching products.
+  useEffect(() => {
+    setEditing(false);
+    setName(product?.name || "");
+    setDescription(product?.description || "");
+    setPrice(product?.price || 0);
+    setAvailable(product?.available ?? true);
+    setHoliday(product?.holidaySpecial ?? false);
+    setTiktok(product?.tiktokLink || "");
+    setImages(product?.images || []);
+    setCurrent(startIndex || 0);
+  }, [
+    product?.id,
+    product?.name,
+    product?.description,
+    product?.price,
+    product?.available,
+    product?.holidaySpecial,
+    product?.tiktokLink,
+    product?.images,
+    startIndex,
+  ]);
+
   if (!product) return null;
+
+  const isAdmin =
+    !!user &&
+    (user.uid === "NLL2HDQcDPVezIih8OKLJ0CCaGl2" || user.uid === "auIgf2eZJkQQffUD0bR4ZYuuArj2");
+
+  const buildInquiryText = () => {
+    const share = buildShareLink(product.id);
+    const header = requestName ? `Sveiki! Mani sauc ${requestName}.` : "Sveiki!";
+    const details = `Produkts: ${product.name || product.id}\nCena: ${product.price ?? "?"} €\nSaite: ${share}`;
+    const msg = requestMsg ? `\n\nZiņa:\n${requestMsg}` : "";
+    return `${header}\n\n${details}${msg}`;
+  };
+
+  const submitInquiryToSite = async () => {
+    if (requestSubmitting) return;
+    setRequestSubmitting(true);
+    setRequestStatus(null);
+    try {
+      const share = buildShareLink(product.id);
+      await addDoc(collection(db, "products", product.id, "inquiries"), {
+        name: requestName?.trim() || "",
+        message: requestMsg?.trim() || "",
+        createdAt: serverTimestamp(),
+        shareLink: share,
+      });
+      setRequestStatus({ type: "success", message: "Pieprasījums nosūtīts. Mēs ar jums sazināsimies." });
+      setRequestName("");
+      setRequestMsg("");
+      setTimeout(() => setRequestStatus(null), 4000);
+    } catch (err) {
+      console.error("Failed to submit inquiry", err);
+      setRequestStatus({ type: "error", message: "Neizdevās nosūtīt pieprasījumu. Pamēģiniet vēlreiz." });
+    } finally {
+      setRequestSubmitting(false);
+    }
+  };
+
+  const handleSignIn = async () => {
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (err) {
+      console.error("Login failed:", err);
+    }
+  };
 
   const next = () => {
     rotatorRef.current?.next?.();
@@ -92,20 +178,45 @@ export default function ProductModal({ product, user, onClose, startIndex = 0 })
     setSaving(true);
     try {
       const pRef = doc(db, "products", product.id);
+      const nextPrice = Number(price);
       await updateDoc(pRef, {
         name,
         description,
-        price: Number(price),
+        price: nextPrice,
         available,
         holidaySpecial: holiday,
         tiktokLink: tiktok || null,
       });
+
+      if (typeof onProductUpdated === "function") {
+        onProductUpdated({
+          id: product.id,
+          name,
+          description,
+          price: nextPrice,
+          available,
+          holidaySpecial: holiday,
+          tiktokLink: tiktok || null,
+          images,
+        });
+      }
+
       setSaving(false);
       setEditing(false);
     } catch (err) {
       console.error("Failed to save product", err);
       setSaving(false);
     }
+  };
+
+  const handleCancelEdit = () => {
+    setName(product?.name || "");
+    setDescription(product?.description || "");
+    setPrice(product?.price || 0);
+    setAvailable(product?.available ?? true);
+    setHoliday(product?.holidaySpecial ?? false);
+    setTiktok(product?.tiktokLink || "");
+    setEditing(false);
   };
 
   const handleReplaceImage = async (idx, file) => {
@@ -122,7 +233,9 @@ export default function ProductModal({ product, user, onClose, startIndex = 0 })
           const prevPath = getStoragePathFromUrl(prevUrl);
           if (prevPath) await deleteObject(storageRef(storage, prevPath));
         }
-      } catch {}
+      } catch (err) {
+        if (import.meta?.env?.DEV) console.warn("Failed to delete previous image:", err);
+      }
 
       const nextImages = images.slice();
       nextImages[idx] = url;
@@ -165,7 +278,9 @@ export default function ProductModal({ product, user, onClose, startIndex = 0 })
       try {
         const path = getStoragePathFromUrl(images[idx]);
         if (path) await deleteObject(storageRef(storage, path));
-      } catch {}
+      } catch (err) {
+        if (import.meta?.env?.DEV) console.warn("Failed to delete image from storage:", err);
+      }
       const nextImages = images.filter((_, i) => i !== idx);
       await updateDoc(doc(db, "products", product.id), { images: nextImages });
       setImages(nextImages);
@@ -174,14 +289,10 @@ export default function ProductModal({ product, user, onClose, startIndex = 0 })
         onClose();
         setTimeout(async () => {
           try {
-            const likesSnap = await getDocs(collection(db, "products", product.id, "likes"));
-            await Promise.all(likesSnap.docs.map(d => deleteDoc(doc(db, "products", product.id, "likes", d.id))));
-          } catch {}
-          try {
-            const commSnap = await getDocs(query(collection(db, "products", product.id, "comments")));
-            await Promise.all(commSnap.docs.map(d => deleteDoc(doc(db, "products", product.id, "comments", d.id))));
-          } catch {}
-          try { await deleteDoc(doc(db, "products", product.id)); } catch {}
+            await deleteDoc(doc(db, "products", product.id));
+          } catch (err) {
+            if (import.meta?.env?.DEV) console.warn("Failed to delete product during cleanup:", err);
+          }
         }, 200);
       }
     } catch (err) {
@@ -193,7 +304,12 @@ export default function ProductModal({ product, user, onClose, startIndex = 0 })
   const performDeleteAllImages = async () => {
     try {
       await Promise.all(images.map(async (url) => {
-        try { const path = getStoragePathFromUrl(url); if (path) await deleteObject(storageRef(storage, path)); } catch {}
+        try {
+          const path = getStoragePathFromUrl(url);
+          if (path) await deleteObject(storageRef(storage, path));
+        } catch (err) {
+          if (import.meta?.env?.DEV) console.warn("Failed to delete image from storage:", err);
+        }
       }));
       await updateDoc(doc(db, "products", product.id), { images: [] });
       setImages([]);
@@ -201,14 +317,10 @@ export default function ProductModal({ product, user, onClose, startIndex = 0 })
       onClose();
       setTimeout(async () => {
         try {
-          const likesSnap = await getDocs(collection(db, "products", product.id, "likes"));
-          await Promise.all(likesSnap.docs.map(d => deleteDoc(doc(db, "products", product.id, "likes", d.id))));
-        } catch {}
-        try {
-          const commSnap = await getDocs(query(collection(db, "products", product.id, "comments")));
-          await Promise.all(commSnap.docs.map(d => deleteDoc(doc(db, "products", product.id, "comments", d.id))));
-        } catch {}
-        try { await deleteDoc(doc(db, "products", product.id)); } catch {}
+          await deleteDoc(doc(db, "products", product.id));
+        } catch (err) {
+          if (import.meta?.env?.DEV) console.warn("Failed to delete product during cleanup:", err);
+        }
       }, 200);
     } catch (err) {
       console.error("Failed to delete all images", err);
@@ -239,8 +351,8 @@ export default function ProductModal({ product, user, onClose, startIndex = 0 })
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 overflow-auto">
       <div
         ref={modalRef}
-        className="w-full max-w-4xl max-h-[90vh] rounded overflow-auto flex flex-col"
-        style={{ backgroundColor: 'var(--panel)', color: 'var(--text)' }}
+        className="w-full max-w-4xl max-h-[90vh] rounded-lg overflow-auto flex flex-col"
+        style={{ backgroundColor: 'var(--panel)', color: 'var(--text)', border: '1px solid var(--btn-ghost-border)' }}
       >
         {/* Top: Image & Controls */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
@@ -271,6 +383,22 @@ export default function ProductModal({ product, user, onClose, startIndex = 0 })
                 </div>
               )}
 
+              {holiday && (
+                <div
+                  className="absolute top-3 right-3 p-1 rounded-lg pointer-events-none select-none"
+                  style={{ backgroundColor: "var(--panel)", border: "1px solid var(--btn-ghost-border)" }}
+                  aria-hidden="true"
+                >
+                  <img
+                    src="/holiday.png"
+                    alt=""
+                    className="w-9 h-9"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
+              )}
+
               {images?.length > 1 && (
                 <>
                   <button
@@ -290,15 +418,15 @@ export default function ProductModal({ product, user, onClose, startIndex = 0 })
             </div>
 
             {/* Buttons (admin-only) */}
-            {user && (user.uid === "NLL2HDQcDPVezIih8OKLJ0CCaGl2" || user.uid === "auIgf2eZJkQQffUD0bR4ZYuuArj2") && (
+            {isAdmin && (
               <div className="flex flex-wrap gap-2 mt-2">
                 <input ref={addRef} type="file" multiple accept="image/*" className="hidden" onChange={handleFileChangeAdd}/>
                 <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChangeReplace}/>
-                <button onClick={() => addRef.current.click()} className="flex-1 min-w-[120px] py-2 bg-green-200 text-green-800 rounded">Pievienot attēlu</button>
+                <button onClick={() => addRef.current.click()} className="btn btn-success flex-1 min-w-[120px]">Pievienot attēlu</button>
                 {images?.length > 0 && <>
-                  <button onClick={() => fileRef.current.click()} className="flex-1 min-w-[120px] py-2 bg-yellow-100 text-yellow-800 rounded">Mainīt attēlu</button>
-                  <button onClick={() => handleDeleteImage(current)} className="flex-1 min-w-[120px] py-2 bg-red-100 text-red-700 rounded">Noņemt attēlu</button>
-                  <button onClick={handleDeleteAllImages} className="flex-1 min-w-[120px] py-2 bg-gray-100 text-gray-800 rounded">Noņemt visus</button>
+                  <button onClick={() => fileRef.current.click()} className="btn btn-warning flex-1 min-w-[120px]">Mainīt attēlu</button>
+                  <button onClick={() => handleDeleteImage(current)} className="btn btn-danger flex-1 min-w-[120px]">Noņemt attēlu</button>
+                  <button onClick={handleDeleteAllImages} className="btn btn-neutral flex-1 min-w-[120px]">Noņemt visus</button>
                 </>}
               </div>
             )}
@@ -308,8 +436,9 @@ export default function ProductModal({ product, user, onClose, startIndex = 0 })
               <div className="flex gap-2 overflow-x-auto mt-2">
                 {images.map((src, i) => (
                   <button key={i} onClick={() => { rotatorRef.current?.setCurrent(i); rotatorRef.current?.pause?.(); setIsPaused(true); }}
-                    className={`w-20 h-20 rounded overflow-hidden border ${i === current ? "ring-2" : ""}`} style={{ borderColor: 'var(--btn-ghost-border)' }}>
-                    <img src={src} alt={`thumb-${i}`} className="w-full h-full object-cover"/>
+                    className={`w-20 h-20 rounded overflow-hidden border ${i === current ? "border-2" : ""}`}
+                    style={{ borderColor: i === current ? 'var(--btn-primary-bg)' : 'var(--btn-ghost-border)' }}>
+                    <img src={normalizeFirebaseStorageUrl(src)} alt={`thumb-${i}`} className="w-full h-full object-cover" loading="lazy" decoding="async"/>
                   </button>
                 ))}
               </div>
@@ -319,44 +448,95 @@ export default function ProductModal({ product, user, onClose, startIndex = 0 })
           {/* Right: Info & Editing */}
           <div className="flex flex-col gap-4">
             <div className="flex justify-between items-center">
-              <h4 className="font-semibold text-lg">{product.name}</h4>
-              <div className="flex items-center gap-4">
-                <p className="font-semibold text-lg">{product.price} €</p>
-                <button onClick={onClose} className="px-3 py-1 rounded btn btn-ghost">Aizvērt</button>
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <p className="font-semibold text-lg">{price} €</p>
+                <h4 className="font-semibold text-lg truncate" style={{ minWidth: 0 }}>{name}</h4>
               </div>
+              <button onClick={onClose} className="px-3 py-1 rounded btn btn-ghost">Aizvērt</button>
             </div>
+
+            <div className="btn-group">
+              <button
+                type="button"
+                className={`btn ${wishlist.isSaved(product.id) ? "btn-danger" : "btn-primary"}`}
+                onClick={async () => {
+                  await wishlist.toggle({
+                    ...product,
+                    images: images?.length ? images : product.images || (product.imageURL ? [product.imageURL] : []),
+                  });
+                }}
+              >
+                {wishlist.isSaved(product.id) ? "Saglabāts" : "Saglabāt"}
+              </button>
+
+              {!editing && isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => setEditing(true)}
+                  className="btn btn-primary"
+                >
+                  Rediģēt
+                </button>
+              )}
+            </div>
+
+            {!user && wishlist.isSaved(product.id) && (
+              <div className="text-sm" style={{ color: "var(--muted)" }}>
+                Saglabāts tikai šajā ierīcē. <button type="button" className="btn-link" onClick={handleSignIn}>Pieslēdzies</button>, lai sinhronizētu starp ierīcēm.
+              </div>
+            )}
 
             {!editing ? (
               <div className="space-y-2">
-                <p className="whitespace-pre-wrap text-muted">{product.description}</p>
-                {product.tiktokLink && <a href={product.tiktokLink} target="_blank" rel="noreferrer" className="underline"><img src="/tiktok.png" alt="TikTok" className="tiktok-icon"/></a>}
-                <div className="flex gap-2 mt-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className={`px-2 py-1 rounded badge ${available ? 'badge-available' : 'badge-unavailable'}`}>{available ? "Pieejams" : "Pārdots"}</span>
-                  {holiday && <span className="px-2 py-1 rounded badge badge-holiday">Svētku piedāvājums</span>}
                 </div>
-                {user && <button onClick={() => setEditing(true)} className="px-3 py-1 rounded btn-primary mt-2">Rediģēt</button>}
+                <p className="whitespace-pre-wrap text-muted">{description}</p>
+                {tiktok && <a href={tiktok} target="_blank" rel="noreferrer" className="underline"><img src="/tiktok.png" alt="TikTok" className="tiktok-icon"/></a>}
               </div>
             ) : (
               <div className="space-y-2">
                 <label className="block text-sm">Nosaukums</label>
-                <input value={name} onChange={e => setName(e.target.value)} className="w-full border rounded px-3 py-2"/>
+                <input
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  className="w-full border rounded px-3 py-2"
+                  style={{ borderColor: 'var(--btn-ghost-border)', backgroundColor: 'transparent', color: 'var(--text)' }}
+                />
                 <label className="block text-sm">Cena (€)</label>
-                <input type="number" value={price} onChange={e => setPrice(e.target.value)} className="w-full border rounded px-3 py-2"/>
+                <input
+                  type="number"
+                  value={price}
+                  onChange={e => setPrice(e.target.value)}
+                  className="w-full border rounded px-3 py-2"
+                  style={{ borderColor: 'var(--btn-ghost-border)', backgroundColor: 'transparent', color: 'var(--text)' }}
+                />
                 <label className="block text-sm">Apraksts</label>
-                <textarea value={description} onChange={e => setDescription(e.target.value)} rows={6} className="w-full border rounded px-3 py-2"/>
+                <textarea
+                  value={description}
+                  onChange={e => setDescription(e.target.value)}
+                  rows={6}
+                  className="w-full border rounded px-3 py-2"
+                  style={{ borderColor: 'var(--btn-ghost-border)', backgroundColor: 'transparent', color: 'var(--text)' }}
+                />
                 <label className="block text-sm">TikTok saite</label>
-                <input value={tiktok} onChange={e => setTiktok(e.target.value)} className="w-full border rounded px-3 py-2"/>
+                <input
+                  value={tiktok}
+                  onChange={e => setTiktok(e.target.value)}
+                  className="w-full border rounded px-3 py-2"
+                  style={{ borderColor: 'var(--btn-ghost-border)', backgroundColor: 'transparent', color: 'var(--text)' }}
+                />
                 <div className="mt-4 flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6">
                   <div className="flex items-center gap-2 w-full md:w-auto">
                     <label className="text-sm">Pieejams</label>
                     <button
                       type="button"
                       onClick={() => setAvailable((v) => !v)}
-                      className={`switch switch--default`}
+                      className={`switch switch--small`}
                       style={{ background: available ? 'var(--badge-available-bg)' : 'transparent' }}
                       aria-pressed={available}
                     >
-                      <div className="knob" style={{ transform: available ? 'translateX(20px)' : 'translateX(0)' }} aria-hidden/>
+                      <div className="knob" aria-hidden/>
                     </button>
                     <span className={`ml-2 px-2 py-1 rounded badge ${available ? 'badge-available' : 'badge-unavailable'}`}>{available ? "Pieejams" : "Pārdots"}</span>
                   </div>
@@ -366,18 +546,74 @@ export default function ProductModal({ product, user, onClose, startIndex = 0 })
                     <button
                       type="button"
                       onClick={() => setHoliday((v) => !v)}
-                      className={`switch switch--default`}
+                      className={`switch switch--small`}
                       style={{ background: holiday ? 'var(--badge-holiday-bg)' : 'transparent' }}
                       aria-pressed={holiday}
                     >
-                      <div className="knob" style={{ transform: holiday ? 'translateX(20px)' : 'translateX(0)' }} aria-hidden/>
+                      <div className="knob" aria-hidden/>
                     </button>
                     <span className={`ml-2 px-2 py-1 rounded badge ${holiday ? 'badge-holiday' : 'badge-unavailable'}`}>{holiday ? "Jā" : "Nē"}</span>
                   </div>
                 </div>
-                <div className="flex gap-4">
-                  <button onClick={handleSave} disabled={saving} className="px-3 py-1 rounded btn-primary">Saglabāt</button>
-                  <button onClick={() => setEditing(false)} className="px-3 py-1 rounded btn btn-ghost">Atcelt</button>
+                <div className="btn-group">
+                  <button onClick={handleSave} disabled={saving} className="btn btn-primary">Saglabāt</button>
+                  <button onClick={handleCancelEdit} className="btn btn-ghost">Atcelt</button>
+                </div>
+              </div>
+            )}
+
+            {/* WhatsApp request form */}
+            {!editing && (
+              <div className="mt-2 border rounded p-3" style={{ borderColor: 'var(--btn-ghost-border)', backgroundColor: 'var(--panel)' }}>
+                <div className="font-semibold">Pieprasīt pasūtījumu / līdzīgu</div>
+                <div className="text-sm mt-1" style={{ color: 'var(--muted)' }}>
+                  Ziņa tiks atvērta WhatsApp ar šī produkta informāciju.
+                </div>
+
+                <div className="mt-3 grid grid-cols-1 gap-2">
+                  <input
+                    value={requestName}
+                    onChange={(e) => setRequestName(e.target.value)}
+                    placeholder="Jūsu vārds (nav obligāti)"
+                    className="w-full border rounded px-3 py-2"
+                    style={{ borderColor: 'var(--btn-ghost-border)', backgroundColor: 'transparent', color: 'var(--text)' }}
+                  />
+                  <textarea
+                    value={requestMsg}
+                    onChange={(e) => setRequestMsg(e.target.value)}
+                    placeholder="Ko vēlaties? (piem., daudzums, krāsas, datums, piegāde, utt.)"
+                    rows={4}
+                    className="w-full border rounded px-3 py-2"
+                    style={{ borderColor: 'var(--btn-ghost-border)', backgroundColor: 'transparent', color: 'var(--text)' }}
+                  />
+
+                  {requestStatus?.message && (
+                    <div
+                      className="text-sm"
+                      style={{ color: requestStatus.type === "error" ? "#ef4444" : "var(--muted)" }}
+                    >
+                      {requestStatus.message}
+                    </div>
+                  )}
+
+                  <div className="btn-group">
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={() => openWhatsApp(buildInquiryText())}
+                    >
+                      Sūtīt WhatsApp
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn btn-ghost"
+                      disabled={requestSubmitting}
+                      onClick={submitInquiryToSite}
+                    >
+                      Sūtīt pieprasījumu
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -404,10 +640,6 @@ export default function ProductModal({ product, user, onClose, startIndex = 0 })
           </div>
         )}
 
-        {/* Comments */}
-        <div className="px-4 pb-6">
-          <CommentsSection productId={product.id}/>
-        </div>
       </div>
     </div>
   );

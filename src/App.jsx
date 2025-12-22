@@ -1,30 +1,30 @@
-import React, { useState, useEffect } from "react";
+import React, { Suspense, useMemo } from "react";
 import Navbar from "./components/Navbar.jsx";
 import Hero from "./components/Home/Hero.jsx";
 import ProductsGrid from "./components/Home/ProductsGrid.jsx";
 import InspirationsGrid from "./components/Home/InspirationsGrid.jsx";
 import AdminPanel from "./components/Home/AdminPanel.jsx";
-import ProductPage from "./components/Pages/ProductPage.jsx";
-import InspirationPage from "./components/Pages/InspirationPage.jsx";
-import { auth } from "./firebase/firebase";
-import { onAuthStateChanged } from "firebase/auth";
-import CommentsAllPage from "./components/Pages/CommentPage.jsx";
+import useAuth from "./hooks/useAuth";
+
+// App uses pathname-based routing (no react-router).
+
+const ProductPage = React.lazy(() => import("./components/Pages/ProductPage.jsx"));
+const InspirationPage = React.lazy(() => import("./components/Pages/InspirationPage.jsx"));
+const WishlistPage = React.lazy(() => import("./components/Pages/WishlistPage.jsx"));
+const AboutPage = React.lazy(() => import("./components/Pages/AboutPage.jsx"));
 
 function App() {
-  const [user, setUser] = useState(null);
+  const { user } = useAuth();
 
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => setUser(u));
-    return () => unsub();
-  }, []);
-
-  const path = window.location.pathname;
+  const path = useMemo(() => window.location.pathname, []);
 
   if (path === "/produkti") {
     return (
       <div>
-        <Navbar user={user} />
-        <ProductPage />
+        <Navbar />
+        <Suspense fallback={<div className="p-6" style={{ color: "var(--muted)" }}>Ielādē...</div>}>
+          <ProductPage user={user} />
+        </Suspense>
       </div>
     );
   }
@@ -32,27 +32,42 @@ function App() {
   if (path === "/iedvesma") {
     return (
       <div>
-        <Navbar user={user} />
-        <InspirationPage />
+        <Navbar />
+        <Suspense fallback={<div className="p-6" style={{ color: "var(--muted)" }}>Ielādē...</div>}>
+          <InspirationPage />
+        </Suspense>
       </div>
     );
   }
 
-  if (path === "/komentari" || path === "/comments") {
+  if (path === "/wishlist") {
     return (
       <div>
-        <Navbar user={user} />
-        <CommentsAllPage />
+        <Navbar />
+        <Suspense fallback={<div className="p-6" style={{ color: "var(--muted)" }}>Ielādē...</div>}>
+          <WishlistPage user={user} />
+        </Suspense>
+      </div>
+    );
+  }
+
+  if (path === "/par-mani" || path === "/about") {
+    return (
+      <div>
+        <Navbar />
+        <Suspense fallback={<div className="p-6" style={{ color: "var(--muted)" }}>Ielādē...</div>}>
+          <AboutPage />
+        </Suspense>
       </div>
     );
   }
 
   return (
     <div>
-      <Navbar user={user} />
+      <Navbar />
       <Hero />
       <AdminPanel user={user} />
-      <ProductsGrid maxRows={3} />
+      <ProductsGrid maxRows={3} user={user} />
       <InspirationsGrid maxRows={3} />
     </div>
   );

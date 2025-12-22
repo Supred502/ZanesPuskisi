@@ -12,14 +12,17 @@ service cloud.firestore {
 
   match /databases/{database}/documents {
 
-    // Top-level comments (seed/demo data)
-    // The runtime app uses per-product subcollections for comments, but
-    // `seedFirestore.js` writes a top-level `comments` collection for demo purposes.
-    // Allow public read so the comments overview page can show seeded comments.
-    match /comments/{commentId} {
-      allow read: if true;
-      // Do NOT allow unauthenticated clients to write top-level demo comments.
-      allow create, update, delete: if false;
+    // ------------------
+    // USERS (wishlist)
+    // ------------------
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && request.auth.uid == userId;
+
+      match /wishlist/{productId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow create, update, delete: if request.auth != null && request.auth.uid == userId;
+      }
     }
 
     // ------------------
@@ -33,21 +36,12 @@ service cloud.firestore {
       allow write: if isAdmin();
 
       // ------------------
-      // LIKES (subcollection)
+      // INQUIRIES (public form submissions)
       // ------------------
-      match /likes/{userId} {
-  			allow read: if true; // everyone can see comments
-        allow create, update, delete: if request.auth != null
-                              && (request.auth.uid == resource.data.userId || isAdmin());
-      }
-
-      // ------------------
-      // COMMENTS (subcollection)
-      // ------------------
-      match /comments/{commentId} {
-        allow read: if true; // everyone can see comments
-        allow create, update, delete: if request.auth != null
-                              && (request.auth.uid == resource.data.userId || isAdmin());
+      match /inquiries/{inquiryId} {
+        // Public can create an inquiry; only admins can read/manage them
+        allow create: if true;
+        allow read, update, delete: if isAdmin();
       }
     }
   }

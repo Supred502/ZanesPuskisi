@@ -1,4 +1,7 @@
 {
+  "functions": {
+    "source": "functions"
+  },
   "firestore": {
     "database": "(default)",
     "location": "europe-north1",
@@ -13,6 +16,33 @@
       "**/node_modules/**"
     ],
     "headers": [
+      {
+        "source": "/sw.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=0, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "/workbox-*.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=0, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "/manifest.webmanifest",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=0, must-revalidate"
+          }
+        ]
+      },
       {
         "source": "/index.html",
         "headers": [
@@ -42,6 +72,22 @@
       }
     ],
     "rewrites": [
+      {
+        "source": "/s/**",
+        "function": "share"
+      },
+      {
+        "source": "/share/**",
+        "function": "share"
+      },
+      {
+        "source": "/wa",
+        "function": "whatsapp"
+      },
+      {
+        "source": "/wa/**",
+        "function": "whatsapp"
+      },
       {
         "source": "**",
         "destination": "/index.html"

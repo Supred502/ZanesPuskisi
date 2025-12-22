@@ -1,46 +1,44 @@
 ## Copilot Instructions — ZanesPuskisi
 
-Purpose: concise, actionable guidance for an AI coding agent to be productive quickly.
+Purpose: repo-specific notes so an AI coding agent can ship changes fast without breaking Firebase flows, deep-links, or the PWA.
 
-**Stack & Runtime:** React 19 + Vite; Tailwind via `@tailwindcss/vite`. Firebase (Auth, Firestore, Storage) powers the backend.
+### Stack & Commands
 
-**Quick Commands:**
+- React 19 + Vite (ESM). Tailwind via `@tailwindcss/vite`. Firebase: Auth + Firestore + Storage.
+- Commands: `npm install`, `npm run dev`, `npm run build`, `npm run preview`, `npm run lint`.
 
-- `npm install`: install deps
-- `npm run dev`: start Vite dev server (HMR)
-- `npm run build`: build
-- `npm run preview`: preview build
-- `npm run lint`: run ESLint
+### App Structure (important)
 
-**High‑value files to read first:**
+- Entry: `src/main.jsx` mounts `src/App.jsx` and registers the PWA SW only in `import.meta.env.PROD`.
+- Routing: no `react-router`. `src/App.jsx` uses `window.location.pathname` and lazily loads pages.
+- Navigation: `src/components/Navbar.jsx` uses normal `<a href>` but intercepts click to `window.location.assign(...)`.
 
-- `src/main.jsx` → imports `src/App.jsx` (edit the file actually imported by `main.jsx`).
-- `src/firebase/firebase.js` → exports `auth`, `db`, `storage`, `googleProvider` (credentials are committed).
-- `src/hooks/useLikes.js` → canonical like logic and listener patterns.
-- `src/components/Home/ProductsGrid.jsx`, `src/components/Modal/ProductModal.jsx`, `src/components/Modal/CommentsSection.jsx` → listing, like/comment UI, image upload/delete, and cleanup flows.
+### Firebase Model & Invariants
 
-**Data model & important invariants:**
+- Products: Firestore collection `products` (readable by anyone). Admins write (see `firestore.rules`).
+- Wishlist: per-user subcollection `users/{uid}/wishlist/{productId}` when signed in; local-only fallback in `localStorage` when signed out (see `src/hooks/useWishlist.js`).
+- Inquiries: `products/{productId}/inquiries` subcollection; public can `create`, admins can read/manage (see `firestore.rules`, used by `src/components/Modal/ProductModal.jsx`).
 
-- Primary collection: `products`.
-- Likes: stored per-product at `products/{productId}/likes/{userUid}` — keep this shape (UI uses per-product listeners; `useLikes.js` relies on it).
-- Comments: runtime expects `products/{productId}/comments` subcollections (do not assume any top-level `comments` script unless explicitly present).
+### Deep-links + Share Previews (critical)
 
-**Patterns & gotchas to preserve:**
+- `/s/<id>` and `/share/<id>` are Firebase Hosting rewrites to the Cloud Function `share` (see `firebase.json`, `functions/index.js`).
+- The function returns OG-tag HTML and redirects to `/produkti?p=<id>`.
+- The SPA opens the modal by reading `?p=<id>` or `#product-<id>` inside `src/components/Home/ProductsGrid.jsx`.
+- PWA: `vite.config.js` denies SW navigate fallback for `/s/` and `/share/` to keep OG previews working.
 
-- `useLikes.js`: subscribes to each product's `likes` subcollection (preferred over collectionGroup for robustness). Follow its structure when adding listeners.
-- `ProductModal.jsx`: uses `getStoragePathFromUrl(url)` to derive storage object paths before deleting — keep storage URL decoding compatible.
-- Product/image deletion: code schedules background cleanup using `setTimeout` to avoid race conditions; preserve or explicitly replace that behavior.
-- Mixed `.js`/`.jsx`: always follow the import used by `src/main.jsx` (currently `App.jsx`).
+### Storage URLs & Image Handling
 
-**Auth & security notes:**
+- Upload paths are `products/<uid|anon>/<timestamp>_<idx>_<filename>` (see `AdminPanel.jsx`, `ProductModal.jsx`).
+- When rendering stored image URLs, use `src/utils/normalizeFirebaseStorageUrl.js` to handle older `*.appspot.com` bucket URLs.
+- Deleting the last image triggers a delayed product doc cleanup via `setTimeout(..., 200)` in `ProductModal.jsx`—preserve that behavior unless you replace it intentionally.
 
-- Firebase credentials are in `src/firebase/firebase.js`. If switching projects, update this file (and any seed scripts) or refactor to env vars.
-- Like documents include `userId` to satisfy Firestore rules; preserve that shape when creating/deleting likes.
+### “Source of truth” files
 
-**Examples (copy/paste):**
+- `src/App.jsx`, `src/components/Home/ProductsGrid.jsx`, `src/components/Modal/ProductModal.jsx`
+- `src/hooks/useWishlist.js`, `src/firebase/firebase.js`, `src/utils/normalizeFirebaseStorageUrl.js`
+- `functions/index.js`, `firebase.json`, `firestore.rules`, `vite.config.js`
 
-- Toggle like: `doc(db, 'products', productId, 'likes', user.uid)` then `setDoc` / `deleteDoc` (see `src/hooks/useLikes.js`).
-- Add comment: `addDoc(collection(db, 'products', productId, 'comments'), { message, name, createdAt: serverTimestamp() })` (see `CommentsSection.jsx`).
-- Listen to products: `onSnapshot(collection(db, 'products'), ...)` (see `ProductsGrid.jsx`).
+### Copy/paste snippets (match repo patterns)
 
-If you want, I can expand this with a short migration checklist (e.g., moving comments to a top-level collection) or add a small troubleshooting section for common runtime errors. Please tell me which section to expand.
+- Toggle wishlist (signed-in): `doc(db, 'users', user.uid, 'wishlist', productId)` + `setDoc/deleteDoc` (see `src/hooks/useWishlist.js`).
+- Create inquiry: `addDoc(collection(db, 'products', productId, 'inquiries'), { name, message, createdAt: serverTimestamp(), shareLink })` (see `ProductModal.jsx`).

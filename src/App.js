@@ -6,7 +6,6 @@ import InspirationsGrid from "./components/Home/InspirationsGrid";
 import AdminPanel from "./components/Home/AdminPanel";
 import ProductPage from "./components/Pages/ProductPage";
 import InspirationPage from "./components/Pages/InspirationPage";
-import CommentsAllPage from "./components/Pages/CommentPage";
 import { auth } from "./firebase/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 
@@ -33,15 +32,6 @@ function App() {
       <div>
         <Navbar user={user} />
         <InspirationPage />
-      </div>
-    );
-  }
-
-  if (path === "/komentari" || path === "/comments") {
-    return (
-      <div>
-        <Navbar user={user} />
-        <CommentsAllPage />
       </div>
     );
   }

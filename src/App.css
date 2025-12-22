@@ -1,8 +1,8 @@
 #root {
   width: 100%;
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+  max-width: none;
+  margin: 0;
+  padding: 0;
   text-align: left;
   box-sizing: border-box;
 }
@@ -21,12 +21,6 @@
 }
 .header-logo.dark-brighten {
   filter: brightness(1.6) saturate(1.2);
-}
-
-@media (prefers-color-scheme: dark) {
-  .header-logo {
-    filter: brightness(1.4) saturate(1.1);
-  }
 }
 .logo:hover {
   filter: drop-shadow(0 0 1.2em rgba(100, 108, 255, 0.45));

@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Rules
+
+# Firebase local artifacts
+.firebase/
