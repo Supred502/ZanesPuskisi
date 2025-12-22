@@ -31,8 +31,23 @@ export default defineConfig({
         // Important: allow /s/* and /share/* to hit the network.
         // These routes are handled by a Cloud Function to provide OG previews + redirects.
         // If the SW serves index.html for them, the modal deep-link can't work reliably.
-        navigateFallbackDenylist: [/^\/s\//, /^\/share\//],
+        // Also denylist /wa so the WhatsApp redirect function can run.
+        navigateFallbackDenylist: [/^\/s\//, /^\/share\//, /^\/wa(\/|$)/],
         runtimeCaching: [
+          // Never let the SW serve the SPA shell for these function-backed routes.
+          {
+            urlPattern: ({ url }) =>
+              url.origin === self.location.origin &&
+              (url.pathname === "/wa" || url.pathname.startsWith("/wa/")),
+            handler: "NetworkOnly",
+          },
+          {
+            urlPattern: ({ url }) =>
+              url.origin === self.location.origin &&
+              (url.pathname.startsWith("/s/") ||
+                url.pathname.startsWith("/share/")),
+            handler: "NetworkOnly",
+          },
           {
             urlPattern: ({ url }) =>
               url.origin === "https://firebasestorage.googleapis.com" ||

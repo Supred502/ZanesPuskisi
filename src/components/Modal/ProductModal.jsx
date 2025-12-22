@@ -581,7 +581,7 @@ export default function ProductModal({ product, user, onClose, startIndex = 0, o
                   <textarea
                     value={requestMsg}
                     onChange={(e) => setRequestMsg(e.target.value)}
-                    placeholder="Ko vēlaties? (piem., daudzums, krāsas, datums, piegāde, utt.)"
+                    placeholder="Ko vēlaties? (piem., pirkt, krāsas, datums, piegāde, utt.)"
                     rows={4}
                     className="w-full border rounded px-3 py-2"
                     style={{ borderColor: 'var(--btn-ghost-border)', backgroundColor: 'transparent', color: 'var(--text)' }}

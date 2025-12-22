@@ -167,13 +167,54 @@ exports.whatsapp = onRequest(
       }
 
       const textRaw = req.query?.text;
-      const text = typeof textRaw === "string" ? textRaw : "";
-      const target = `https://wa.me/${encodeURIComponent(
-        phone
-      )}?text=${encodeURIComponent(text)}`;
+      const text =
+        typeof textRaw === "string"
+          ? textRaw
+          : Array.isArray(textRaw)
+          ? String(textRaw[0] ?? "")
+          : "";
+
+      const formatRaw = req.query?.format;
+      const format = typeof formatRaw === "string" ? formatRaw : "";
+      // Use the same URL format as WhatsApp's own "Click to Chat" endpoint.
+      // This is generally more reliable than wa.me in some in-app browsers/PWA contexts.
+      const target =
+        `https://api.whatsapp.com/send/?phone=${encodeURIComponent(phone)}` +
+        `&text=${encodeURIComponent(text)}` +
+        `&type=phone_number&app_absent=0`;
 
       res.set("Cache-Control", "no-store");
-      res.redirect(302, target);
+
+      // JSON mode: lets the SPA fetch the final URL without navigating to /wa.
+      // Useful when an older Service Worker incorrectly serves the SPA shell for /wa navigations.
+      if (format.toLowerCase() === "json") {
+        res.set("X-Robots-Tag", "noindex");
+        res.status(200).json({ url: target });
+        return;
+      }
+
+      // Prefer an HTML redirect page over an HTTP 302.
+      // Some contexts (installed PWAs, in-app browsers) can mishandle cross-origin 302s.
+      res.set("X-Robots-Tag", "noindex");
+      res.set("Content-Type", "text/html; charset=utf-8");
+      res.status(200).send(`<!doctype html>
+<html lang="lv">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Atver WhatsApp…</title>
+    <meta http-equiv="refresh" content="0;url=${escapeHtml(target)}" />
+  </head>
+  <body>
+    <p>Atver WhatsApp…</p>
+    <p><a href="${escapeHtml(target)}" rel="noopener noreferrer">Atvērt</a></p>
+    <script>
+      setTimeout(function () {
+        window.location.replace(${JSON.stringify(target)})
+      }, 50)
+    </script>
+  </body>
+</html>`);
     } catch (err) {
       console.error("whatsapp() failed:", err);
       res
