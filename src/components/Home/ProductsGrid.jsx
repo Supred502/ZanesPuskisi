@@ -167,6 +167,21 @@ export default function ProductsGrid({ maxRows, user } = {}) {
   const displayProducts = useMemo(() => {
     const list = Array.isArray(availableProducts) ? [...availableProducts] : [];
 
+    const getDiscountInfo = (p) => {
+      const base = Number(p?.price);
+      const special = Number(p?.holidayPrice);
+      const enabled = Boolean(p?.holidaySpecial);
+      const hasDiscount = enabled && Number.isFinite(base) && Number.isFinite(special) && special > 0 && base > 0 && special < base;
+      return { base, special, enabled, hasDiscount };
+    };
+
+    const getEffectivePrice = (p) => {
+      const { base, special, hasDiscount } = getDiscountInfo(p);
+      if (hasDiscount) return special;
+      if (Number.isFinite(base)) return base;
+      return 0;
+    };
+
     const getCreatedAtMs = (v) => {
       if (!v) return 0;
       if (typeof v === "number") return v;
@@ -186,10 +201,10 @@ export default function ProductsGrid({ maxRows, user } = {}) {
         list.sort((a, b) => getCreatedAtMs(a?.createdAt) - getCreatedAtMs(b?.createdAt) || byName(a, b));
         break;
       case "price-asc":
-        list.sort((a, b) => Number(a?.price ?? 0) - Number(b?.price ?? 0) || byName(a, b));
+        list.sort((a, b) => getEffectivePrice(a) - getEffectivePrice(b) || byName(a, b));
         break;
       case "price-desc":
-        list.sort((a, b) => Number(b?.price ?? 0) - Number(a?.price ?? 0) || byName(a, b));
+        list.sort((a, b) => getEffectivePrice(b) - getEffectivePrice(a) || byName(a, b));
         break;
       case "name-asc":
         list.sort((a, b) => byName(a, b));
@@ -472,7 +487,24 @@ export default function ProductsGrid({ maxRows, user } = {}) {
                 )}
               </div>
               <div className="flex items-center gap-3 min-w-0">
-                <p className="text-xl font-semibold">{p.price} €</p>
+                  {(() => {
+                    const base = Number(p?.price);
+                    const special = Number(p?.holidayPrice);
+                    const hasDiscount = Boolean(p?.holidaySpecial) && Number.isFinite(base) && Number.isFinite(special) && special > 0 && base > 0 && special < base;
+
+                    if (!hasDiscount) {
+                      return <p className="text-xl font-semibold whitespace-nowrap">{p.price} €</p>;
+                    }
+
+                    return (
+                      <div className="text-xl font-semibold whitespace-nowrap flex items-baseline gap-2">
+                        <span className="line-through text-base" style={{ color: "var(--muted)" }}>
+                          {base} €
+                        </span>
+                        <span className="text-green-600">{special} €</span>
+                      </div>
+                    );
+                  })()}
                 <h3 className="text-xl font-semibold truncate" style={{ minWidth: 0 }}>{p.name}</h3>
               </div>
 
@@ -494,7 +526,11 @@ export default function ProductsGrid({ maxRows, user } = {}) {
                   className="btn btn-primary"
                   onClick={() => {
                     const share = buildShareLink(p.id);
-                    const text = `Sveiki! Mani interesē šis produkts: ${p.name || p.id}.\nCena: ${p.price ?? "?"} €\nSaite: ${share}`;
+                    const base = Number(p?.price);
+                    const special = Number(p?.holidayPrice);
+                    const hasDiscount = Boolean(p?.holidaySpecial) && Number.isFinite(base) && Number.isFinite(special) && special > 0 && base > 0 && special < base;
+                    const priceLine = hasDiscount ? `Cena: ${special} € (iepriekš ${base} €)` : `Cena: ${p.price ?? "?"} €`;
+                    const text = `Sveiki! Mani interesē šis produkts: ${p.name || p.id}.\n${priceLine}\nSaite: ${share}`;
                     openWhatsApp(text);
                   }}
                 >

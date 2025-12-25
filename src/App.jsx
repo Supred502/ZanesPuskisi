@@ -5,6 +5,7 @@ import ProductsGrid from "./components/Home/ProductsGrid.jsx";
 import InspirationsGrid from "./components/Home/InspirationsGrid.jsx";
 import AdminPanel from "./components/Home/AdminPanel.jsx";
 import useAuth from "./hooks/useAuth";
+import { isAdminUser } from "./utils/isAdminUid";
 
 // App uses pathname-based routing (no react-router).
 
@@ -15,6 +16,7 @@ const AboutPage = React.lazy(() => import("./components/Pages/AboutPage.jsx"));
 
 function App() {
   const { user } = useAuth();
+  const isAdmin = isAdminUser(user);
 
   const path = useMemo(() => window.location.pathname, []);
 
@@ -66,7 +68,7 @@ function App() {
     <div>
       <Navbar />
       <Hero />
-      <AdminPanel user={user} />
+      {isAdmin && <AdminPanel user={user} />}
       <ProductsGrid maxRows={3} user={user} />
       <InspirationsGrid maxRows={3} />
     </div>

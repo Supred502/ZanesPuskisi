@@ -8,6 +8,7 @@ import ProductPage from "./components/Pages/ProductPage";
 import InspirationPage from "./components/Pages/InspirationPage";
 import { auth } from "./firebase/firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import { isAdminUser } from "./utils/isAdminUid";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -40,7 +41,7 @@ function App() {
     <div>
       <Navbar user={user} />
       <Hero />
-      <AdminPanel user={user} />
+      {isAdminUser(user) && <AdminPanel user={user} />}
       <ProductsGrid />
       <InspirationsGrid />
     </div>

@@ -3,13 +3,6 @@
 export default function AboutPage() {
   return (
     <main className="max-w-4xl mx-auto p-6">
-      <header>
-        <h1 className="text-2xl font-bold">Par mani</h1>
-        <p className="mt-2 text-sm" style={{ color: "var(--muted)" }}>
-          Šī lapa ir paredzēta īsam stāstam par tevi un Zanes Pušķīšiem.
-        </p>
-      </header>
-
       <section
         className="mt-6 border rounded p-4"
         style={{ backgroundColor: "var(--panel)", borderColor: "var(--btn-ghost-border)" }}
@@ -32,12 +25,8 @@ export default function AboutPage() {
           <div>
             <h2 className="text-lg font-semibold">Roku darbs ar mīlestību</h2>
             <p className="mt-2" style={{ color: "var(--text)" }}>
-              Mani produkti ir roku darbs — katrs pušķis tiek veidots individuāli, rūpīgi piemeklējot
-              krāsas, kompozīciju un detaļas. Iedvesmu smeļos sezonās, noskaņās un jūsu idejās — lai
-              rezultāts ir īpašs un tieši jums piemērots.
-            </p>
-            <p className="mt-2 text-sm" style={{ color: "var(--muted)" }}>
-              Ja vēlies līdzīgu darbu citās krāsās vai izmērā, uzraksti — pielāgošu pasūtījumu.
+              Es veidoju satīna lentīšu ziedu pušķus ar lielu rūpību un mīlestību. Man patīk darboties ar rokām, radīt ko jaunu un ļaut idejām pārtapt skaistos, unikālos darbos. Katrs pušķis top nesteidzīgi, ar uzmanību pret detaļām un sirds siltumu.
+Laika gaitā esmu lēnām augusi un pilnveidojusies, izveidojot daudzveidīgu darbu galeriju. Tajā ikviens var smelties iedvesmu un atrast sev piemērotāko – gan dāvanai, gan īpašiem dzīves mirkļiem.
             </p>
           </div>
         </div>
@@ -62,8 +51,10 @@ export default function AboutPage() {
           <div>
             <h2 className="text-lg font-semibold">Mans stāsts</h2>
             <p className="mt-2" style={{ color: "var(--text)" }}>
-              Uzraksti pāris teikumus par sevi: kā sākās aizraušanās ar pušķu veidošanu, kas tevi
-              iedvesmo, un ko cilvēki var sagaidīt no taviem darbiem.
+              Mans radošais ceļš ziedu un pušķu veidošanā sākās pavisam personiski — ar manām kāzām. Toreiz vēl nestrādāju ar satīna lentēm, bet gan ar kreppapīru, un visas kāzu dekorācijas veidoju pati. Tajā brīdī sapratu, cik ļoti mani aizrauj radīšanas process un cik daudz prieka sniedz iespēja ar saviem darbiem radīt svētku sajūtu.
+Ar ziedu veidošanu atkal sastapos Sieviešu dienā, strādājot kolektīvā, kurā esam tikai meitenes. Iedvesmojoties no video, kur no satīna lentēm tika veidotas skaistas rozes, nolēmu pamēģināt pati. Tā tapa mani pirmie satīna lentīšu pušķīši — katrai kolēģei kā neliela, sirsnīga dāvana.
+Šie pušķi kļuva par sākumu kam lielākam. Kolēģes iedvesmojās un arvien biežāk lūdza izveidot pušķus dāvanām — vienu, otru, trešo reizi. Ar katru darbu pilnveidoju savas prasmes, meklēju jaunus risinājumus un dizainus, un pamazām mana aizraušanās pārtapa par mazu, sirds darbu pilnu biznesu.
+Šodien katrs satīna pušķis top ar rūpību, mīlestību un vēlmi iepriecināt — jo skaistas lietas rodas tad, ja tās veido no sirds.
             </p>
           </div>
         </div>
@@ -86,9 +77,6 @@ export default function AboutPage() {
         style={{ backgroundColor: "var(--panel)", borderColor: "var(--btn-ghost-border)" }}
       >
         <h2 className="text-lg font-semibold">Kontakti</h2>
-        <p className="mt-2 text-sm" style={{ color: "var(--muted)" }}>
-          Pievieno ērtāko saziņas veidu (piem., Instagram, WhatsApp vai e-pastu).
-        </p>
 
         <div className="mt-3 btn-group">
           <a className="btn btn-primary" href="/wa" target="_blank" rel="noreferrer">
@@ -100,9 +88,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <p className="mt-6 text-xs" style={{ color: "var(--muted)" }}>
-        Piezīme: nomaini tekstu un saites uz savām.
-      </p>
     </main>
   );
 }

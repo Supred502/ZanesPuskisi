@@ -29,6 +29,7 @@ export default function WishlistPage({ user }) {
         price: it.price,
         imageURL: it.imageURL,
         holidaySpecial: it.holidaySpecial,
+        holidayPrice: it.holidayPrice,
         _raw: it,
       })),
     [items]
@@ -101,7 +102,26 @@ export default function WishlistPage({ user }) {
                 </div>
 
                 <div className="flex items-center gap-3 min-w-0">
-                  {it.price != null && <div className="text-xl font-semibold">{it.price} €</div>}
+                  {(() => {
+                    const base = Number(it?.price);
+                    const special = Number(it?.holidayPrice);
+                    const hasDiscount = Boolean(it?.holidaySpecial) && Number.isFinite(base) && Number.isFinite(special) && special > 0 && base > 0 && special < base;
+
+                    if (it.price == null) return null;
+
+                    if (!hasDiscount) {
+                      return <div className="text-xl font-semibold whitespace-nowrap">{it.price} €</div>;
+                    }
+
+                    return (
+                      <div className="text-xl font-semibold whitespace-nowrap flex items-baseline gap-2">
+                        <span className="line-through text-base" style={{ color: "var(--muted)" }}>
+                          {base} €
+                        </span>
+                        <span className="text-green-600">{special} €</span>
+                      </div>
+                    );
+                  })()}
                   <div className="font-semibold text-lg truncate" style={{ minWidth: 0 }}>{it.name || "Produkts"}</div>
                 </div>
 
@@ -119,6 +139,8 @@ export default function WishlistPage({ user }) {
                           name: it.name,
                           description: it.description,
                           price: it.price,
+                          holidaySpecial: it.holidaySpecial,
+                          holidayPrice: it.holidayPrice,
                           images: it.imageURL ? [it.imageURL] : [],
                           available: true,
                         }
@@ -133,7 +155,11 @@ export default function WishlistPage({ user }) {
                     className="btn btn-primary"
                     onClick={() => {
                       const share = buildShareLink(it.productId);
-                      const text = `Sveiki! Mani interesē šis produkts: ${it.name || it.productId}.\nCena: ${it.price ?? "?"} €\nSaite: ${share}`;
+                      const base = Number(it?.price);
+                      const special = Number(it?.holidayPrice);
+                      const hasDiscount = Boolean(it?.holidaySpecial) && Number.isFinite(base) && Number.isFinite(special) && special > 0 && base > 0 && special < base;
+                      const priceLine = hasDiscount ? `Cena: ${special} € (iepriekš ${base} €)` : `Cena: ${it.price ?? "?"} €`;
+                      const text = `Sveiki! Mani interesē šis produkts: ${it.name || it.productId}.\n${priceLine}\nSaite: ${share}`;
                       openWhatsApp(text);
                     }}
                   >

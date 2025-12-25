@@ -7,6 +7,7 @@ import {
   collection,
   serverTimestamp,
 } from "firebase/firestore";
+import { isAdminUser } from "../../utils/isAdminUid";
 import { db } from "../../firebase/firebase.js";
 import {
   ref as storageRef,
@@ -21,6 +22,12 @@ import { signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "../../firebase/firebase.js";
 import normalizeFirebaseStorageUrl from "../../utils/normalizeFirebaseStorageUrl";
 import { openWhatsApp } from "../../utils/whatsapp";
+import {
+  DEFAULT_INSPIRATION_CATEGORY,
+  INSPIRATION_CATEGORIES,
+  coerceInspirationCategory,
+  suggestInspirationCategoryFromName,
+} from "../../utils/inspirationCategories";
 
 function buildShareLink(productId) {
   try {
@@ -37,8 +44,11 @@ export default function ProductModal({ product, user, onClose, startIndex = 0, o
   const [name, setName] = useState(product?.name || "");
   const [description, setDescription] = useState(product?.description || "");
   const [price, setPrice] = useState(product?.price || 0);
+  const [category, setCategory] = useState(product?.category || DEFAULT_INSPIRATION_CATEGORY);
+  const [categoryTouched, setCategoryTouched] = useState(false);
   const [available, setAvailable] = useState(product?.available ?? true);
   const [holiday, setHoliday] = useState(product?.holidaySpecial ?? false);
+  const [holidayPrice, setHolidayPrice] = useState(product?.holidayPrice ?? "");
   const [tiktok, setTiktok] = useState(product?.tiktokLink || "");
   const [images, setImages] = useState(product?.images || []);
   const [saving, setSaving] = useState(false);
@@ -89,8 +99,11 @@ export default function ProductModal({ product, user, onClose, startIndex = 0, o
     setName(product?.name || "");
     setDescription(product?.description || "");
     setPrice(product?.price || 0);
+    setCategory(product?.category || DEFAULT_INSPIRATION_CATEGORY);
+    setCategoryTouched(false);
     setAvailable(product?.available ?? true);
     setHoliday(product?.holidaySpecial ?? false);
+    setHolidayPrice(product?.holidayPrice ?? "");
     setTiktok(product?.tiktokLink || "");
     setImages(product?.images || []);
     setCurrent(startIndex || 0);
@@ -99,8 +112,10 @@ export default function ProductModal({ product, user, onClose, startIndex = 0, o
     product?.name,
     product?.description,
     product?.price,
+    product?.category,
     product?.available,
     product?.holidaySpecial,
+    product?.holidayPrice,
     product?.tiktokLink,
     product?.images,
     startIndex,
@@ -108,14 +123,26 @@ export default function ProductModal({ product, user, onClose, startIndex = 0, o
 
   if (!product) return null;
 
-  const isAdmin =
-    !!user &&
-    (user.uid === "NLL2HDQcDPVezIih8OKLJ0CCaGl2" || user.uid === "auIgf2eZJkQQffUD0bR4ZYuuArj2");
+  const isAdmin = isAdminUser(user);
+
+  const getDiscountInfo = (p) => {
+    const base = Number(p?.price);
+    const special = Number(p?.holidayPrice);
+    const enabled = Boolean(p?.holidaySpecial);
+    const hasDiscount = enabled && Number.isFinite(base) && Number.isFinite(special) && special > 0 && base > 0 && special < base;
+    return { base, special, enabled, hasDiscount };
+  };
+
+  const formatPriceLine = (p) => {
+    const { base, special, hasDiscount } = getDiscountInfo(p);
+    if (hasDiscount) return `Cena: ${special} € (iepriekš ${base} €)`;
+    return `Cena: ${p?.price ?? "?"} €`;
+  };
 
   const buildInquiryText = () => {
     const share = buildShareLink(product.id);
     const header = requestName ? `Sveiki! Mani sauc ${requestName}.` : "Sveiki!";
-    const details = `Produkts: ${product.name || product.id}\nCena: ${product.price ?? "?"} €\nSaite: ${share}`;
+    const details = `Produkts: ${product.name || product.id}\n${formatPriceLine(product)}\nSaite: ${share}`;
     const msg = requestMsg ? `\n\nZiņa:\n${requestMsg}` : "";
     return `${header}\n\n${details}${msg}`;
   };
@@ -179,12 +206,19 @@ export default function ProductModal({ product, user, onClose, startIndex = 0, o
     try {
       const pRef = doc(db, "products", product.id);
       const nextPrice = Number(price);
+      const nextHolidayPrice = Number(holidayPrice);
+      const nextHolidayPriceValue = holiday && Number.isFinite(nextHolidayPrice) && nextHolidayPrice > 0 && nextHolidayPrice < nextPrice
+        ? nextHolidayPrice
+        : null;
+      const nextCategory = coerceInspirationCategory(category);
       await updateDoc(pRef, {
         name,
         description,
         price: nextPrice,
+        category: nextCategory,
         available,
         holidaySpecial: holiday,
+        holidayPrice: nextHolidayPriceValue,
         tiktokLink: tiktok || null,
       });
 
@@ -194,8 +228,10 @@ export default function ProductModal({ product, user, onClose, startIndex = 0, o
           name,
           description,
           price: nextPrice,
+          category: nextCategory,
           available,
           holidaySpecial: holiday,
+          holidayPrice: nextHolidayPriceValue,
           tiktokLink: tiktok || null,
           images,
         });
@@ -213,8 +249,11 @@ export default function ProductModal({ product, user, onClose, startIndex = 0, o
     setName(product?.name || "");
     setDescription(product?.description || "");
     setPrice(product?.price || 0);
+    setCategory(product?.category || DEFAULT_INSPIRATION_CATEGORY);
+    setCategoryTouched(false);
     setAvailable(product?.available ?? true);
     setHoliday(product?.holidaySpecial ?? false);
+    setHolidayPrice(product?.holidayPrice ?? "");
     setTiktok(product?.tiktokLink || "");
     setEditing(false);
   };
@@ -449,7 +488,26 @@ export default function ProductModal({ product, user, onClose, startIndex = 0, o
           <div className="flex flex-col gap-4">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-3 min-w-0 flex-1">
-                <p className="font-semibold text-lg">{price} €</p>
+                {(() => {
+                  const { base, special, hasDiscount } = getDiscountInfo({
+                    price,
+                    holidayPrice,
+                    holidaySpecial: holiday,
+                  });
+
+                  if (!hasDiscount) {
+                    return <p className="font-semibold text-lg">{price} €</p>;
+                  }
+
+                  return (
+                    <div className="flex items-baseline gap-2 font-semibold text-lg whitespace-nowrap">
+                      <span className="line-through" style={{ color: "var(--muted)" }}>
+                        {base} €
+                      </span>
+                      <span className="text-green-600">{special} €</span>
+                    </div>
+                  );
+                })()}
                 <h4 className="font-semibold text-lg truncate" style={{ minWidth: 0 }}>{name}</h4>
               </div>
               <button onClick={onClose} className="px-3 py-1 rounded btn btn-ghost">Aizvērt</button>
@@ -462,6 +520,8 @@ export default function ProductModal({ product, user, onClose, startIndex = 0, o
                 onClick={async () => {
                   await wishlist.toggle({
                     ...product,
+                    holidaySpecial: holiday,
+                    holidayPrice,
                     images: images?.length ? images : product.images || (product.imageURL ? [product.imageURL] : []),
                   });
                 }}
@@ -499,10 +559,37 @@ export default function ProductModal({ product, user, onClose, startIndex = 0, o
                 <label className="block text-sm">Nosaukums</label>
                 <input
                   value={name}
-                  onChange={e => setName(e.target.value)}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setName(next);
+
+                    // Smart suggestion: only auto-select while admin hasn't manually chosen.
+                    if (!categoryTouched) {
+                      setCategory(suggestInspirationCategoryFromName(next));
+                    }
+                  }}
                   className="w-full border rounded px-3 py-2"
                   style={{ borderColor: 'var(--btn-ghost-border)', backgroundColor: 'transparent', color: 'var(--text)' }}
                 />
+
+                <label className="block text-sm">Kategorija</label>
+                <select
+                  className="w-full border rounded px-3 py-2"
+                  value={category}
+                  onChange={(e) => {
+                    setCategoryTouched(true);
+                    setCategory(e.target.value);
+                  }}
+                  style={{ borderColor: 'var(--btn-ghost-border)', backgroundColor: 'transparent', color: 'var(--text)' }}
+                  required
+                >
+                  {INSPIRATION_CATEGORIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+
                 <label className="block text-sm">Cena (€)</label>
                 <input
                   type="number"
@@ -511,6 +598,18 @@ export default function ProductModal({ product, user, onClose, startIndex = 0, o
                   className="w-full border rounded px-3 py-2"
                   style={{ borderColor: 'var(--btn-ghost-border)', backgroundColor: 'transparent', color: 'var(--text)' }}
                 />
+                {holiday && (
+                  <>
+                    <label className="block text-sm">Svētku cena (€)</label>
+                    <input
+                      type="number"
+                      value={holidayPrice}
+                      onChange={(e) => setHolidayPrice(e.target.value)}
+                      className="w-full border rounded px-3 py-2"
+                      style={{ borderColor: 'var(--btn-ghost-border)', backgroundColor: 'transparent', color: 'var(--text)' }}
+                    />
+                  </>
+                )}
                 <label className="block text-sm">Apraksts</label>
                 <textarea
                   value={description}
@@ -545,7 +644,13 @@ export default function ProductModal({ product, user, onClose, startIndex = 0, o
                     <label className="text-sm">Svētku piedāvājums</label>
                     <button
                       type="button"
-                      onClick={() => setHoliday((v) => !v)}
+                      onClick={() =>
+                        setHoliday((v) => {
+                          const next = !v;
+                          if (!next) setHolidayPrice("");
+                          return next;
+                        })
+                      }
                       className={`switch switch--small`}
                       style={{ background: holiday ? 'var(--badge-holiday-bg)' : 'transparent' }}
                       aria-pressed={holiday}

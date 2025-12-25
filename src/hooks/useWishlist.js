@@ -100,6 +100,12 @@ export default function useWishlist(user) {
     const productId = product?.id;
     if (!productId) return;
 
+    const holidayPriceNumber = Number(product?.holidayPrice);
+    const holidayPriceValue =
+      Number.isFinite(holidayPriceNumber) && holidayPriceNumber > 0
+        ? holidayPriceNumber
+        : null;
+
     if (uid) {
       const ref = doc(db, "users", uid, "wishlist", productId);
       const wasSaved = isSaved(productId);
@@ -123,6 +129,8 @@ export default function useWishlist(user) {
               typeof product.price === "number"
                 ? product.price
                 : product.price ?? null,
+            holidaySpecial: Boolean(product.holidaySpecial),
+            holidayPrice: holidayPriceValue,
             imageURL: images[0] || null,
             createdAt: Date.now(),
           };
@@ -140,6 +148,8 @@ export default function useWishlist(user) {
               typeof product.price === "number"
                 ? product.price
                 : product.price ?? null,
+            holidaySpecial: Boolean(product.holidaySpecial),
+            holidayPrice: holidayPriceValue,
             imageURL: images[0] || null,
             createdAt: serverTimestamp(),
           });
@@ -171,6 +181,8 @@ export default function useWishlist(user) {
             typeof product.price === "number"
               ? product.price
               : product.price ?? null,
+          holidaySpecial: Boolean(product.holidaySpecial),
+          holidayPrice: holidayPriceValue,
           imageURL: images[0] || null,
           createdAt: Date.now(),
         },

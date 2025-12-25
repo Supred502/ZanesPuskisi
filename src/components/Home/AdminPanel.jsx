@@ -6,6 +6,13 @@ import {
   getDownloadURL,
 } from "firebase/storage";
 import { db, storage } from "../../firebase/firebase";
+import { isAdminUser } from "../../utils/isAdminUid";
+import {
+  DEFAULT_INSPIRATION_CATEGORY,
+  INSPIRATION_CATEGORIES,
+  coerceInspirationCategory,
+  suggestInspirationCategoryFromName,
+} from "../../utils/inspirationCategories";
 
 function AdminPanelInner({ user }) {
   const [images, setImages] = useState([]); // { file, url }
@@ -15,8 +22,11 @@ function AdminPanelInner({ user }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState(0);
+  const [category, setCategory] = useState(DEFAULT_INSPIRATION_CATEGORY);
+  const [categoryTouched, setCategoryTouched] = useState(false);
   const [available, setAvailable] = useState(true);
   const [holiday, setHoliday] = useState(false);
+  const [holidayPrice, setHolidayPrice] = useState("");
   const [tiktok, setTiktok] = useState("");
   const [replaceIndex, setReplaceIndex] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -29,10 +39,17 @@ function AdminPanelInner({ user }) {
     if (success) console.log(success);
   }, [error, success]);
 
+  const basePrice = Number(price);
+  const nextHolidayPrice = Number(holidayPrice);
+  const holidayPriceOk = !holiday || (nextHolidayPrice > 0 && nextHolidayPrice < basePrice);
+  const categoryOk = Boolean(category && String(category).trim().length > 0);
+
   const canSubmit =
     title.trim().length > 0 &&
-    Number(price) > 0 &&
+    basePrice > 0 &&
     images.length > 0 &&
+    holidayPriceOk &&
+    categoryOk &&
     !submitting;
 
   const disabled = !canSubmit;
@@ -113,9 +130,11 @@ function AdminPanelInner({ user }) {
       const docRef = await addDoc(collection(db, "products"), {
         name: title,
         description,
-        price: Number(price),
+        price: basePrice,
+        category: coerceInspirationCategory(category),
         available,
         holidaySpecial: holiday,
+        holidayPrice: holiday ? nextHolidayPrice : null,
         tiktokLink: tiktok || null,
         images: urls,
         createdAt: serverTimestamp(),
@@ -127,8 +146,11 @@ function AdminPanelInner({ user }) {
       setTitle("");
       setDescription("");
       setPrice(0);
+      setCategory(DEFAULT_INSPIRATION_CATEGORY);
+      setCategoryTouched(false);
       setAvailable(true);
       setHoliday(false);
+      setHolidayPrice("");
       setTiktok("");
       images.forEach((i) => URL.revokeObjectURL(i.url));
       setImages([]);
@@ -297,7 +319,16 @@ function AdminPanelInner({ user }) {
                 </label>
                 <input
                   value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setTitle(next);
+
+                    // Smart suggestion: only auto-select while admin hasn't manually chosen.
+                    if (!categoryTouched) {
+                      const suggested = suggestInspirationCategoryFromName(next);
+                      setCategory(suggested);
+                    }
+                  }}
                   className="w-full border rounded px-3 py-2"
                   style={{ borderColor: 'var(--btn-ghost-border)', backgroundColor: 'transparent', color: 'var(--text)' }}
                 />
@@ -315,6 +346,28 @@ function AdminPanelInner({ user }) {
                   style={{ borderColor: 'var(--btn-ghost-border)', backgroundColor: 'transparent', color: 'var(--text)' }}
                 />
               </div>
+            </div>
+
+            <div className="mt-4">
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--muted)' }}>
+                Kategorija
+              </label>
+              <select
+                className="w-full border rounded px-3 py-2"
+                value={category}
+                onChange={(e) => {
+                  setCategoryTouched(true);
+                  setCategory(e.target.value);
+                }}
+                style={{ borderColor: 'var(--btn-ghost-border)', backgroundColor: 'transparent', color: 'var(--text)' }}
+                required
+              >
+                {INSPIRATION_CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="mt-4">
@@ -351,7 +404,13 @@ function AdminPanelInner({ user }) {
                 <label className="text-sm">Svētku piedāvājums</label>
                  <button
                    type="button"
-                   onClick={() => setHoliday((v) => !v)}
+                   onClick={() =>
+                     setHoliday((v) => {
+                       const next = !v;
+                       if (!next) setHolidayPrice("");
+                       return next;
+                     })
+                   }
                    className={`switch switch--small`}
                    style={{ background: holiday ? 'var(--badge-holiday-bg)' : 'transparent' }}
                    aria-pressed={holiday}
@@ -363,6 +422,26 @@ function AdminPanelInner({ user }) {
                 </span>
               </div>
             </div>
+
+            {holiday && (
+              <div className="mt-4">
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--muted)' }}>
+                  Svtku cena (2)
+                </label>
+                <input
+                  type="number"
+                  value={holidayPrice}
+                  onChange={(e) => setHolidayPrice(e.target.value)}
+                  className="w-full border rounded px-3 py-2"
+                  style={{ borderColor: 'var(--btn-ghost-border)', backgroundColor: 'transparent', color: 'var(--text)' }}
+                />
+                {basePrice > 0 && nextHolidayPrice > 0 && nextHolidayPrice >= basePrice && (
+                  <div className="mt-1 text-sm" style={{ color: 'var(--muted)' }}>
+                    Svtku cenai j1bbt maz1kai nek1 pamata cenai.
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="mt-4">
               <label className="block text-sm font-medium mb-1" style={{ color: 'var(--muted)' }}>
@@ -399,6 +478,6 @@ function AdminPanelInner({ user }) {
 }
 
 export default function AdminPanel({ user }) {
-  if (!user) return null;
+  if (!isAdminUser(user)) return null;
   return <AdminPanelInner user={user} />;
 }
