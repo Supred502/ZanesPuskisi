@@ -13,6 +13,7 @@ const ProductPage = React.lazy(() => import("./components/Pages/ProductPage.jsx"
 const InspirationPage = React.lazy(() => import("./components/Pages/InspirationPage.jsx"));
 const WishlistPage = React.lazy(() => import("./components/Pages/WishlistPage.jsx"));
 const AboutPage = React.lazy(() => import("./components/Pages/AboutPage.jsx"));
+const PrivacyPage = React.lazy(() => import("./components/Pages/PrivacyPage.jsx"));
 
 function App() {
   const { user } = useAuth();
@@ -59,6 +60,17 @@ function App() {
         <Navbar />
         <Suspense fallback={<div className="p-6" style={{ color: "var(--muted)" }}>Ielādē...</div>}>
           <AboutPage />
+        </Suspense>
+      </div>
+    );
+  }
+
+  if (path === "/privatums" || path === "/privacy") {
+    return (
+      <div>
+        <Navbar />
+        <Suspense fallback={<div className="p-6" style={{ color: "var(--muted)" }}>Ielādē...</div>}>
+          <PrivacyPage />
         </Suspense>
       </div>
     );

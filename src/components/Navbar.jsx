@@ -148,6 +148,20 @@ export default function Navbar() {
           >
             Par mani
           </a>
+          <a
+            href="/privatums"
+            className="font-medium"
+            onClick={(e) => {
+              e.preventDefault();
+              try {
+                window.location.assign("/privatums");
+              } catch {
+                window.location.href = "/privatums";
+              }
+            }}
+          >
+            Privātums
+          </a>
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-4 shrink-0">
@@ -189,6 +203,7 @@ export default function Navbar() {
                   <button role="menuitem" className="w-full text-left px-3 py-2" onClick={(e) => { setMoreOpen(false); e.preventDefault(); try { window.location.assign('/iedvesma'); } catch { window.location.href = '/iedvesma'; } }}>Iedvesma</button>
                   <button role="menuitem" className="w-full text-left px-3 py-2" onClick={(e) => { setMoreOpen(false); e.preventDefault(); try { window.location.assign('/wishlist'); } catch { window.location.href = '/wishlist'; } }}>Vēlmju saraksts</button>
                   <button role="menuitem" className="w-full text-left px-3 py-2" onClick={(e) => { setMoreOpen(false); e.preventDefault(); try { window.location.assign('/par-mani'); } catch { window.location.href = '/par-mani'; } }}>Par mani</button>
+                  <button role="menuitem" className="w-full text-left px-3 py-2" onClick={(e) => { setMoreOpen(false); e.preventDefault(); try { window.location.assign('/privatums'); } catch { window.location.href = '/privatums'; } }}>Privātums</button>
                 </div>
               </div>
             )}
