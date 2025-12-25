@@ -1,0 +1,19 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.uid in [
+          "NLL2HDQcDPVezIih8OKLJ0CCaGl2",
+          "auIgf2eZJkQQffUD0bR4ZYuuArj2"
+        ];
+    }
+
+    // Public site: anyone can view images.
+    // Writes are admin-only to prevent abuse/cost blowups.
+    match /{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

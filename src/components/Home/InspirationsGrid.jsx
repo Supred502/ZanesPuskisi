@@ -56,7 +56,6 @@ export default function InspirationsGrid({ maxRows } = {}) {
     } catch {
       // ignore storage failures
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFullPage]);
 
   // Persist selection so returning to /iedvesma keeps the last opened category.
