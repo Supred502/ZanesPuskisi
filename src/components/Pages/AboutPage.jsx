@@ -86,6 +86,12 @@ Ar ziedu veidošanu atkal sastapos Sieviešu dienā, strādājot kolektīvā, ku
             TikTok
           </a>
         </div>
+
+        <div className="mt-3 text-sm" style={{ color: "var(--muted)" }}>
+          <a className="underline" href="/privatums">
+            Privātums
+          </a>
+        </div>
       </section>
 
     </main>
