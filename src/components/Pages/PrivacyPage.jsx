@@ -22,8 +22,8 @@ export default function PrivacyPage() {
             <h2 className="text-lg font-semibold">Kādus datus mēs ievācam</h2>
             <ul className="mt-2 list-disc pl-5">
               <li>
-                Pieprasījuma forma: vārds (ja norādāt) un ziņa (ja norādāt), kā arī
-                produkta saite, lai saprastu, par kuru produktu ir jautājums.
+                Saziņa: ja izvēlaties rakstīt mums WhatsApp, jūsu ziņa tiks apstrādāta
+                WhatsApp platformā.
               </li>
               <li>
                 Tehniskie dati: pārlūkprogrammas tehniskā informācija un tīkla pieprasījuma
@@ -43,9 +43,9 @@ export default function PrivacyPage() {
           <div>
             <h2 className="text-lg font-semibold">Glabāšanas termiņš</h2>
             <p className="mt-2">
-              Pieprasījumi tiek glabāti tik ilgi, cik tas ir nepieciešams saziņai un
-              pakalpojuma nodrošināšanai. Parasti pieprasījumi tiek automātiski dzēsti
-              pēc aptuveni 90 dienām. Ja vēlaties, varat lūgt dzēst savu pieprasījumu.
+              Vietne parasti neuzglabā jūsu WhatsApp ziņojumu saturu. Ziņojumu glabāšana
+              ir atkarīga no WhatsApp iestatījumiem un politikas. Ja vēlaties, varat
+              sazināties ar mums par jebkādiem jautājumiem.
             </p>
           </div>
 
@@ -53,7 +53,7 @@ export default function PrivacyPage() {
             <h2 className="text-lg font-semibold">Datu saņēmēji</h2>
             <p className="mt-2">
               Vietne izmanto Google Firebase (hosting, datubāze un attēlu glabāšana), lai
-              nodrošinātu pakalpojumu. Pieprasījumi tiek saglabāti Firebase datubāzē.
+              nodrošinātu pakalpojumu. Saziņai jūs varat izmantot WhatsApp (ārējs pakalpojums).
             </p>
           </div>
 

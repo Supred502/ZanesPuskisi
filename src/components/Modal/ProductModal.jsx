@@ -3,10 +3,6 @@ import {
   doc,
   updateDoc,
   deleteDoc,
-  addDoc,
-  collection,
-  serverTimestamp,
-  Timestamp,
 } from "firebase/firestore";
 import { isAdminUser } from "../../utils/isAdminUid";
 import { db } from "../../firebase/firebase.js";
@@ -59,8 +55,6 @@ export default function ProductModal({ product, user, onClose, startIndex = 0, o
 
   const [requestName, setRequestName] = useState("");
   const [requestMsg, setRequestMsg] = useState("");
-  const [requestSubmitting, setRequestSubmitting] = useState(false);
-  const [requestStatus, setRequestStatus] = useState(null);
 
   const fileRef = useRef(null);
   const addRef = useRef(null);
@@ -95,6 +89,7 @@ export default function ProductModal({ product, user, onClose, startIndex = 0, o
   }, [startIndex]);
 
   // Keep local editable state in sync when switching products.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setEditing(false);
     setName(product?.name || "");
@@ -121,6 +116,7 @@ export default function ProductModal({ product, user, onClose, startIndex = 0, o
     product?.images,
     startIndex,
   ]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   if (!product) return null;
 
@@ -148,56 +144,6 @@ export default function ProductModal({ product, user, onClose, startIndex = 0, o
     return `${header}\n\n${details}${msg}`;
   };
 
-  const submitInquiryToSite = async () => {
-    if (requestSubmitting) return;
-
-    // Lightweight spam/cost control: throttle repeated submissions from the same device.
-    try {
-      const key = `inquiry:last:v1:${product.id}`;
-      const raw = window.localStorage.getItem(key);
-      const last = raw ? Number(raw) : 0;
-      const now = Date.now();
-      const cooldownMs = 30_000;
-      if (Number.isFinite(last) && last > 0 && now - last < cooldownMs) {
-        const secondsLeft = Math.ceil((cooldownMs - (now - last)) / 1000);
-        setRequestStatus({ type: "error", message: `Lūdzu uzgaidiet ${secondsLeft}s un mēģiniet vēlreiz.` });
-        return;
-      }
-    } catch {
-      // ignore localStorage errors
-    }
-
-    setRequestSubmitting(true);
-    setRequestStatus(null);
-    try {
-      const share = buildShareLink(product.id);
-      const retentionDays = 90;
-      const expiresAt = Timestamp.fromMillis(
-        Date.now() + retentionDays * 24 * 60 * 60 * 1000
-      );
-      await addDoc(collection(db, "products", product.id, "inquiries"), {
-        name: requestName?.trim() || "",
-        message: requestMsg?.trim() || "",
-        createdAt: serverTimestamp(),
-        shareLink: share,
-        expiresAt,
-      });
-      try {
-        window.localStorage.setItem(`inquiry:last:v1:${product.id}`, String(Date.now()));
-      } catch {
-        // ignore
-      }
-      setRequestStatus({ type: "success", message: "Pieprasījums nosūtīts. Mēs ar jums sazināsimies." });
-      setRequestName("");
-      setRequestMsg("");
-      setTimeout(() => setRequestStatus(null), 4000);
-    } catch (err) {
-      console.error("Failed to submit inquiry", err);
-      setRequestStatus({ type: "error", message: "Neizdevās nosūtīt pieprasījumu. Pamēģiniet vēlreiz." });
-    } finally {
-      setRequestSubmitting(false);
-    }
-  };
 
   const handleSignIn = async () => {
     try {
@@ -720,15 +666,6 @@ export default function ProductModal({ product, user, onClose, startIndex = 0, o
                     style={{ borderColor: 'var(--btn-ghost-border)', backgroundColor: 'transparent', color: 'var(--text)' }}
                   />
 
-                  {requestStatus?.message && (
-                    <div
-                      className="text-sm"
-                      style={{ color: requestStatus.type === "error" ? "#ef4444" : "var(--muted)" }}
-                    >
-                      {requestStatus.message}
-                    </div>
-                  )}
-
                   <div className="btn-group">
                     <button
                       type="button"
@@ -736,15 +673,6 @@ export default function ProductModal({ product, user, onClose, startIndex = 0, o
                       onClick={() => openWhatsApp(buildInquiryText())}
                     >
                       Sūtīt WhatsApp
-                    </button>
-
-                    <button
-                      type="button"
-                      className="btn btn-ghost"
-                      disabled={requestSubmitting}
-                      onClick={submitInquiryToSite}
-                    >
-                      Sūtīt pieprasījumu
                     </button>
                   </div>
                 </div>
