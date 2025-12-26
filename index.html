@@ -2,20 +2,16 @@
 <html lang="lv">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" href="/favicon.pub/favicon.ico" />
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link
       rel="icon"
       type="image/png"
-      sizes="16x16"
-      href="/favicon.pub/favicon-16x16.png"
+      sizes="192x192"
+      href="/favicon-192x192.png"
     />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href="/favicon.pub/favicon-32x32.png"
-    />
-    <link rel="apple-touch-icon" href="/favicon.pub/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
@@ -23,6 +19,9 @@
       content="Roku darbs ar mīlestību — satīna lentīšu pušķi un dekori. Apskati produktus, iedvesmojies un sazinies par pasūtījumu."
     />
     <meta name="theme-color" content="#111827" />
+
+    <meta name="application-name" content="Zanes Pušķīši" />
+    <meta name="apple-mobile-web-app-title" content="Zanes Pušķīši" />
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Zanes Pušķīši" />
@@ -34,6 +33,28 @@
     <meta property="og:locale" content="lv_LV" />
 
     <meta name="twitter:card" content="summary_large_image" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "name": "Zanes Pušķīši",
+            "url": "https://zanespuskisi.lv/"
+          },
+          {
+            "@type": "Organization",
+            "name": "Zanes Pušķīši",
+            "url": "https://zanespuskisi.lv/",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://zanespuskisi.lv/favicon-192x192.png"
+            }
+          }
+        ]
+      }
+    </script>
     <link href="/src/styles/index.css" rel="stylesheet" />
     <!-- Performance: preconnect to Firebase Storage for faster image fetching -->
     <link
@@ -44,7 +65,7 @@
     <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com" />
     <link rel="preconnect" href="https://storage.googleapis.com" crossorigin />
     <link rel="dns-prefetch" href="https://storage.googleapis.com" />
-    <title>Zanes pušķīši</title>
+    <title>Roku darbi ar mīlestību — satīna lentīšu pušķi un dekori</title>
   </head>
   <body>
     <div id="root"></div>

@@ -1,5 +1,6 @@
 import React, { Suspense, useMemo } from "react";
 import Navbar from "./components/Navbar.jsx";
+import Footer from "./components/Footer.jsx";
 import Hero from "./components/Home/Hero.jsx";
 import ProductsGrid from "./components/Home/ProductsGrid.jsx";
 import InspirationsGrid from "./components/Home/InspirationsGrid.jsx";
@@ -28,6 +29,7 @@ function App() {
         <Suspense fallback={<div className="p-6" style={{ color: "var(--muted)" }}>Ielādē...</div>}>
           <ProductPage user={user} />
         </Suspense>
+        <Footer />
       </div>
     );
   }
@@ -39,6 +41,7 @@ function App() {
         <Suspense fallback={<div className="p-6" style={{ color: "var(--muted)" }}>Ielādē...</div>}>
           <InspirationPage />
         </Suspense>
+        <Footer />
       </div>
     );
   }
@@ -50,6 +53,7 @@ function App() {
         <Suspense fallback={<div className="p-6" style={{ color: "var(--muted)" }}>Ielādē...</div>}>
           <WishlistPage user={user} />
         </Suspense>
+        <Footer />
       </div>
     );
   }
@@ -61,6 +65,7 @@ function App() {
         <Suspense fallback={<div className="p-6" style={{ color: "var(--muted)" }}>Ielādē...</div>}>
           <AboutPage />
         </Suspense>
+        <Footer />
       </div>
     );
   }
@@ -72,6 +77,7 @@ function App() {
         <Suspense fallback={<div className="p-6" style={{ color: "var(--muted)" }}>Ielādē...</div>}>
           <PrivacyPage />
         </Suspense>
+        <Footer />
       </div>
     );
   }
@@ -83,6 +89,7 @@ function App() {
       {isAdmin && <AdminPanel user={user} />}
       <ProductsGrid maxRows={3} user={user} />
       <InspirationsGrid maxRows={3} />
+      <Footer />
     </div>
   );
 }

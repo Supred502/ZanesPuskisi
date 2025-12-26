@@ -1,44 +1,47 @@
 ## Copilot Instructions — ZanesPuskisi
 
-Purpose: repo-specific notes so an AI coding agent can ship changes fast without breaking Firebase flows, deep-links, or the PWA.
+Purpose: repo-specific notes so an AI coding agent can ship changes fast without breaking Firebase flows, deep-links, OG previews, or the PWA.
 
 ### Stack & Commands
 
-- React 19 + Vite (ESM). Tailwind via `@tailwindcss/vite`. Firebase: Auth + Firestore + Storage.
+- React 19 + Vite (ESM) + Tailwind v4 (`@tailwindcss/vite`). Firebase Web SDK (Auth/Firestore/Storage). PWA via `vite-plugin-pwa`.
 - Commands: `npm install`, `npm run dev`, `npm run build`, `npm run preview`, `npm run lint`.
+- Cloud Functions live in `functions/` (Node 20) and are wired via Hosting rewrites in `firebase.json`.
 
-### App Structure (important)
+### SPA Routing & Navigation (no react-router)
 
-- Entry: `src/main.jsx` mounts `src/App.jsx` and registers the PWA SW only in `import.meta.env.PROD`.
-- Routing: no `react-router`. `src/App.jsx` uses `window.location.pathname` and lazily loads pages.
-- Navigation: `src/components/Navbar.jsx` uses normal `<a href>` but intercepts click to `window.location.assign(...)`.
+- `src/App.jsx` routes by `window.location.pathname` and `React.lazy` loads pages; changing routes is a full navigation.
+- `src/components/Navbar.jsx` uses `<a href>` but intercepts clicks to `window.location.assign(...)` (preserve this pattern).
 
-### Firebase Model & Invariants
+### Deep-links, OG Previews, and Service Worker (critical)
 
-- Products: Firestore collection `products` (readable by anyone). Admins write (see `firestore.rules`).
-- Wishlist: per-user subcollection `users/{uid}/wishlist/{productId}` when signed in; local-only fallback in `localStorage` when signed out (see `src/hooks/useWishlist.js`).
-- Inquiries: `products/{productId}/inquiries` subcollection; public can `create`, admins can read/manage (see `firestore.rules`, used by `src/components/Modal/ProductModal.jsx`).
+- Product modal deep-linking is URL-driven in `src/components/Home/ProductsGrid.jsx`:
+  - open: `#product-<id>` (preferred) or `?p=<id>` (share landing)
+  - URL writes preserve scroll via `src/utils/history.js` (`pushUrlPreserveScroll` / `replaceUrlPreserveScroll`).
+- `/s/<id>` and `/share/<id>` are Hosting rewrites to the `share` function in `functions/index.js` (returns OG-tag HTML + meta-refresh/JS redirect to `/produkti?p=<id>`).
+- WhatsApp is also function-backed: `/wa` and `/wa/**` rewrite to `whatsapp` in `functions/index.js`.
+- PWA: `src/main.jsx` registers the SW only in `import.meta.env.PROD`. `vite.config.js` deny-lists `/s/`, `/share/`, and `/wa` from navigate fallback so previews/redirects keep working.
 
-### Deep-links + Share Previews (critical)
+### Firebase Data Model & Access
 
-- `/s/<id>` and `/share/<id>` are Firebase Hosting rewrites to the Cloud Function `share` (see `firebase.json`, `functions/index.js`).
-- The function returns OG-tag HTML and redirects to `/produkti?p=<id>`.
-- The SPA opens the modal by reading `?p=<id>` or `#product-<id>` inside `src/components/Home/ProductsGrid.jsx`.
-- PWA: `vite.config.js` denies SW navigate fallback for `/s/` and `/share/` to keep OG previews working.
+- Products: Firestore `products` is public read; admin-only writes (see `firestore.rules`). Admin gate is `src/utils/isAdminUid.js`.
+- Wishlist: `users/{uid}/wishlist/{productId}` when signed in; signed-out fallback is localStorage `wishlist_local_v1` (see `src/hooks/useWishlist.js`).
+  - Synced mode is optimistic (updates local state first, then `setDoc`/`deleteDoc`, reconciled by `onSnapshot`).
+  - Local mode dispatches `wishlist:changed` for cross-tab refresh.
+- Inquiries: `products/{productId}/inquiries` exists but is currently admin-only in `firestore.rules` (public form submissions are disabled; UI uses WhatsApp flow).
 
-### Storage URLs & Image Handling
+### Images, URLs, and Caching
 
-- Upload paths are `products/<uid|anon>/<timestamp>_<idx>_<filename>` (see `AdminPanel.jsx`, `ProductModal.jsx`).
-- When rendering stored image URLs, use `src/utils/normalizeFirebaseStorageUrl.js` to handle older `*.appspot.com` bucket URLs.
-- Deleting the last image triggers a delayed product doc cleanup via `setTimeout(..., 200)` in `ProductModal.jsx`—preserve that behavior unless you replace it intentionally.
+- Products may store `images: string[]` (preferred) or legacy `imageURL`; always normalize Storage URLs via `src/utils/normalizeFirebaseStorageUrl.js`.
+- Upload paths follow `products/<uid|anon>/<timestamp>_*_<filename>` (see `src/components/Home/AdminPanel.jsx`, `src/components/Modal/ProductModal.jsx`).
+- `src/utils/readImagesStore.js` caches:
+  - image URLs in localStorage (`zp_read_images_v1`) for 24h
+  - product lists in sessionStorage (`zp_products_session_v1`) to avoid repeated Firestore reads
+  - idle-prefetch for non-first images (used by `ProductsGrid.jsx`).
+- Product deletion edge case: deleting the last image triggers a delayed product doc cleanup via `setTimeout(..., 200)` in `ProductModal.jsx` — preserve unless intentionally redesigning.
 
-### “Source of truth” files
+### Key Files (start here)
 
-- `src/App.jsx`, `src/components/Home/ProductsGrid.jsx`, `src/components/Modal/ProductModal.jsx`
-- `src/hooks/useWishlist.js`, `src/firebase/firebase.js`, `src/utils/normalizeFirebaseStorageUrl.js`
+- `src/main.jsx`, `src/App.jsx`, `src/components/Home/ProductsGrid.jsx`, `src/components/Modal/ProductModal.jsx`
+- `src/hooks/useWishlist.js`, `src/utils/readImagesStore.js`, `src/utils/history.js`, `src/utils/whatsapp.js`
 - `functions/index.js`, `firebase.json`, `firestore.rules`, `vite.config.js`
-
-### Copy/paste snippets (match repo patterns)
-
-- Toggle wishlist (signed-in): `doc(db, 'users', user.uid, 'wishlist', productId)` + `setDoc/deleteDoc` (see `src/hooks/useWishlist.js`).
-- Create inquiry: `addDoc(collection(db, 'products', productId, 'inquiries'), { name, message, createdAt: serverTimestamp(), shareLink })` (see `ProductModal.jsx`).

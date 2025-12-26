@@ -1,18 +1,34 @@
-# React + Vite
+# Zanes Pušķīši
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Handmade satin ribbon bouquets and decor — browse products, get inspired, and contact for custom orders. Built with React 19, Vite, Tailwind, and Firebase.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Product catalog with deep-linkable modals (shareable links)
+- Wishlist (syncs with Google account or saves locally if signed out)
+- PWA: installable, offline-friendly, fast image caching
+- WhatsApp integration for direct inquiries
+- Admin panel for product management (admin-only)
+- GDPR-friendly privacy (no analytics, no tracking cookies)
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+- React 19 + Vite + Tailwind CSS
+- Firebase (Auth, Firestore, Storage, Functions)
+- Service Worker via vite-plugin-pwa
 
-Note: This will impact Vite dev & build performances.
+## Privacy
 
-## Expanding the ESLint configuration
+No analytics or tracking cookies. See [Privātums](/privatums) for details.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Live site
+
+https://zanespuskisi.lv/
+
+## Author
+
+Made by [Edijs Rihards Zvirgzds](https://github.com/Supred502)
+
+## License
+
+This project is open source under the [MIT License](LICENSE).
