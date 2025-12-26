@@ -144,6 +144,32 @@ export default function ProductModal({ product, user, onClose, startIndex = 0, o
     return `${header}\n\n${details}${msg}`;
   };
 
+  const handleShare = async () => {
+    const url = buildShareLink(product.id);
+    const title = product?.name ? `Zanes puskīši — ${product.name}` : "Zanes puskīši";
+
+    try {
+      if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+        await navigator.share({ title, url });
+        return;
+      }
+    } catch {
+      // If user cancels or share fails, fall back to clipboard.
+    }
+
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        window.alert("Saite nokopēta!");
+        return;
+      }
+    } catch {
+      // Fall back to prompt below.
+    }
+
+    window.prompt("Kopēt saiti:", url);
+  };
+
 
   const handleSignIn = async () => {
     try {
@@ -673,6 +699,14 @@ export default function ProductModal({ product, user, onClose, startIndex = 0, o
                       onClick={() => openWhatsApp(buildInquiryText())}
                     >
                       Sūtīt WhatsApp
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn btn-ghost"
+                      onClick={handleShare}
+                    >
+                      Dalīties
                     </button>
                   </div>
                 </div>
