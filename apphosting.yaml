@@ -1,0 +1,13 @@
+# Firebase App Hosting (Cloud Run) settings. Rollouts happen on push to main once the backend is connected.
+runConfig:
+  minInstances: 0   # scale to zero: costs nothing when nobody visits
+  maxInstances: 2
+  concurrency: 80
+  memoryMiB: 512
+
+env:
+  - variable: NEXT_PUBLIC_SITE_URL
+    value: https://zanespuskisi.lv
+  - variable: WHATSAPP_PHONE
+    secret: WHATSAPP_PHONE   # existing Secret Manager secret, used by /wa
+    availability: [RUNTIME]

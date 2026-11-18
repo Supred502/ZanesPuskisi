@@ -1,9 +1,0 @@
-User-agent: *
-Allow: /
-
-Disallow: /wishlist
-Disallow: /wa
-Disallow: /s/
-Disallow: /share/
-
-Sitemap: https://zanespuskisi.lv/sitemap.xml

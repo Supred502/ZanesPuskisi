@@ -1,49 +1,32 @@
 rules_version = '2';
 service cloud.firestore {
-
-  // Admin UIDs
+  // Keep in sync with storage.rules and lib/firebase.ts (ADMIN_UIDS)
   function isAdmin() {
-    return request.auth != null
-           && request.auth.uid in [
-             "NLL2HDQcDPVezIih8OKLJ0CCaGl2", // Admin Edijs
-             "auIgf2eZJkQQffUD0bR4ZYuuArj2",  // Admin Loreta
-             "hMWGIjyc3uR61GW12VdNYVV49px2" // Admin Zane
-           ];
+    return request.auth != null && request.auth.uid in [
+      "NLL2HDQcDPVezIih8OKLJ0CCaGl2", // Edijs
+      "auIgf2eZJkQQffUD0bR4ZYuuArj2", // Loreta
+      "hMWGIjyc3uR61GW12VdNYVV49px2"  // Zane
+    ];
+  }
+
+  function validProduct(d) {
+    return d.name is string && d.name.size() > 0 && d.name.size() <= 200
+      && d.price is number && d.price > 0
+      && d.description is string && d.description.size() <= 5000
+      && d.category is string
+      && d.available is bool
+      && d.holidaySpecial is bool
+      && (d.holidayPrice == null || d.holidayPrice is number)
+      && (d.tiktokLink == null || (d.tiktokLink is string && d.tiktokLink.matches('https://.*')))
+      && d.images is list && d.images.size() <= 20;
   }
 
   match /databases/{database}/documents {
-
-    // ------------------
-    // USERS (wishlist)
-    // ------------------
-    match /users/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow write: if request.auth != null && request.auth.uid == userId;
-
-      match /wishlist/{productId} {
-        allow read: if request.auth != null && request.auth.uid == userId;
-        allow create, update, delete: if request.auth != null && request.auth.uid == userId;
-      }
-    }
-
-    // ------------------
-    // PRODUCTS
-    // ------------------
+    // Catalogue: everyone reads, only admins write. Every other collection (old wishlists, inquiries) is closed.
     match /products/{productId} {
-      // Anyone can read products
       allow read: if true;
-
-      // Only admins can add/edit/delete products
-      allow write: if isAdmin();
-
-      // ------------------
-      // INQUIRIES (public form submissions)
-      // ------------------
-      match /inquiries/{inquiryId} {
-        // Public inquiries disabled (WhatsApp-only flow). Admins can still manage if needed.
-        allow create: if isAdmin();
-        allow read, update, delete: if isAdmin();
-      }
+      allow create, update: if isAdmin() && validProduct(request.resource.data);
+      allow delete: if isAdmin();
     }
   }
 }

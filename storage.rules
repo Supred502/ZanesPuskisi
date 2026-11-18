@@ -1,20 +1,22 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
+    // Keep in sync with firestore.rules and lib/firebase.ts (ADMIN_UIDS)
     function isAdmin() {
-      return request.auth != null
-        && request.auth.uid in [
-          "NLL2HDQcDPVezIih8OKLJ0CCaGl2", // Admin Edijs
-          "auIgf2eZJkQQffUD0bR4ZYuuArj2",  // Admin Loreta
-          "hMWGIjyc3uR61GW12VdNYVV49px2" // Admin Zane
-        ];
+      return request.auth != null && request.auth.uid in [
+        "NLL2HDQcDPVezIih8OKLJ0CCaGl2", // Edijs
+        "auIgf2eZJkQQffUD0bR4ZYuuArj2", // Loreta
+        "hMWGIjyc3uR61GW12VdNYVV49px2"  // Zane
+      ];
     }
 
-    // Public site: anyone can view images.
-    // Writes are admin-only to prevent abuse/cost blowups.
-    match /{allPaths=**} {
+    // Product photos: public to view; admins upload images (≤ 10 MB) and delete.
+    match /products/{allPaths=**} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow create, update: if isAdmin()
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if isAdmin();
     }
   }
 }

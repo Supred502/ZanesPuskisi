@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+/* Zanes Maģija (see DESIGN.md): cream page, navy brand, gold accents — from the dandelion logo */
+@theme {
+  --color-bg: #fbf8f2;
+  --color-surface: #ffffff;
+  --color-soft: #f3efe6;
+  --color-line: #e5dfd2;
+  --color-ink: #1b2236;
+  --color-ink-soft: #5e6577;
+  --color-brand: #13254f; /* navy */
+  --color-brand-hover: #0c1a3a;
+  --color-gold: #7a5c14; /* gold text on light backgrounds (5.9:1) */
+  --color-gold-bright: #d4b062; /* gold on navy only */
+  --color-gold-bg: #f6eedb;
+  --color-ok: #2f6b3f;
+  --color-ok-bg: #e7f3ea;
+  --color-danger: #b42318;
+  --radius-card: 12px;
+  --font-sans: var(--font-google-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-pinyon);
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  line-height: 1.6;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--color-soft);
+  color: var(--color-brand-hover);
+}
+
+/* GitHub-style controls: rounded squares (6px), thin border, never pills */
+@utility btn {
+  @apply inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-md border px-4 text-sm font-medium transition-colors duration-150 select-none disabled:cursor-not-allowed disabled:opacity-50;
+}
+@utility btn-primary {
+  @apply border-brand bg-brand text-white hover:border-brand-hover hover:bg-brand-hover;
+}
+@utility btn-ghost {
+  @apply border-line bg-surface text-ink hover:border-ink-soft/40 hover:bg-soft;
+}
+@utility btn-gold {
+  @apply border-gold-bright bg-gold-bright text-brand hover:border-[#e2c47e] hover:bg-[#e2c47e];
+}
+@utility btn-danger {
+  @apply border-danger/40 bg-surface text-danger hover:bg-danger hover:text-white;
+}
+@utility btn-icon {
+  @apply btn btn-ghost min-w-11 px-0;
+}
+@utility chip {
+  @apply inline-flex min-h-9 cursor-pointer items-center rounded-md border border-line bg-surface px-3 text-sm whitespace-nowrap text-ink-soft transition-colors hover:text-ink;
+  &[aria-pressed="true"] {
+    @apply border-brand bg-brand text-white;
+  }
+}
+@utility input {
+  @apply min-h-11 w-full rounded-md border border-line bg-surface px-3 py-2 text-base text-ink placeholder:text-ink-soft/70 focus:border-brand focus:outline-none;
+}
+@utility label {
+  @apply mb-1.5 block text-sm font-medium text-ink;
+}
+@utility card {
+  @apply overflow-hidden rounded-card border border-line bg-surface;
+}
+@utility eyebrow {
+  @apply text-xs font-semibold tracking-[0.14em] text-gold uppercase;
+}
+@utility wrap {
+  @apply mx-auto w-full max-w-[1200px] px-4 sm:px-6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,34 +1,51 @@
-# Zanes Pušķīši
+<p align="center">
+  <img src="app/icon.svg" width="96" alt="">
+</p>
 
-Handmade satin ribbon bouquets and decor — browse products, get inspired, and contact for custom orders. Built with React 19, Vite, Tailwind, and Firebase.
+<h1 align="center">Zanes Maģija</h1>
+
+<p align="center">
+  Online shop window for handmade satin-ribbon bouquets and gift decor: browse what's available,
+  get inspired by past work, and order in one tap on WhatsApp.
+</p>
+
+<p align="center"><a href="https://zanespuskisi.lv"><b>Open the shop</b></a></p>
 
 ## Features
 
-- Product catalog with deep-linkable modals (shareable links)
-- Wishlist (syncs with Google account or saves locally if signed out)
-- PWA: installable, offline-friendly, fast image caching
-- WhatsApp integration for direct inquiries
-- Admin panel for product management (admin-only)
-- GDPR-friendly privacy (no analytics, no tracking cookies)
+**For customers**
+- Available products with category filters and sorting, plus a gallery of past work ("Iedvesma")
+- Product pages with photo gallery, sale (holiday) prices, share button and link previews
+- "Order" opens WhatsApp with a ready message that names the product
+- Wishlist saved on the device, no account needed; old share links keep working
+- No tracking, no ads, no cookies to accept
 
-## Tech Stack
+**For the shop owner** (`/admin`, Google login for three admin accounts)
+- Add and edit products, drag-and-drop photos (shrunk to WebP in the browser before upload), reorder, pick the cover
+- One tap to mark a piece sold: it moves to the past-work gallery
+- Changes show on the public site immediately
 
-- React 19 + Vite + Tailwind CSS
-- Firebase (Auth, Firestore, Storage, Functions)
-- Service Worker via vite-plugin-pwa
+## Run it yourself
 
-## Privacy
+Needs [Node.js](https://nodejs.org) 22+ and access to the Firebase project.
 
-No analytics or tracking cookies. See [Privātums](/privatums) for details.
+```bash
+cp .env.example .env.local   # fill in WHATSAPP_PHONE
+npm install
+npm run dev                   # http://localhost:3000
+```
 
-## Live site
+## Tests
 
-https://zanespuskisi.lv/
+```bash
+npm test && npm run lint && npm run build
+```
 
-## Author
+## Built with
 
-Made by [Edijs Rihards Zvirgzds](https://github.com/Supred502)
+Next.js 16 (App Router, Cache Components), React 19, Tailwind CSS 4, Firebase (Firestore, Storage, Auth),
+hosted on Firebase App Hosting. Design notes: [DESIGN.md](DESIGN.md).
 
 ## License
 
-This project is open source under the [MIT License](LICENSE).
+[MIT](LICENSE). Product photos and texts belong to Zanes Maģija and aren't covered by the license.

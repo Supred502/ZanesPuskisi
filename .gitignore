@@ -32,3 +32,7 @@ dist-ssr
 
 # Firebase local artifacts
 .firebase/
+# Next.js
+.next
+next-env.d.ts
+*.tsbuildinfo
