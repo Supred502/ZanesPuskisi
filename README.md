@@ -5,11 +5,13 @@
 <h1 align="center">Zanes Maģija</h1>
 
 <p align="center">
-  Online shop window for handmade satin-ribbon bouquets and gift decor: browse what's available,
+  Online shop window for handmade gifts, decor and satin-ribbon bouquets from Latvia: browse what's available,
   get inspired by past work, and order in one tap on WhatsApp.
 </p>
 
 <p align="center"><a href="https://zanespuskisi.lv"><b>Open the shop</b></a></p>
+
+<p align="center"><img src="docs/screenshots/home.jpg" alt="Zanes Maģija home page"></p>
 
 ## Features
 
@@ -23,7 +25,7 @@
 **For the shop owner** (`/admin`, Google login for three admin accounts)
 - Add and edit products, drag-and-drop photos (shrunk to WebP in the browser before upload), reorder, pick the cover
 - One tap to mark a piece sold: it moves to the past-work gallery
-- Changes show on the public site immediately
+- Changes show on the public site within a few minutes
 
 ## Run it yourself
 
@@ -33,6 +35,20 @@ Needs [Node.js](https://nodejs.org) 22+ and access to the Firebase project.
 cp .env.example .env.local   # fill in WHATSAPP_PHONE
 npm install
 npm run dev                   # http://localhost:3000
+```
+
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/home-phone.jpg" width="260" alt="Home page on a phone">
+  <img src="docs/screenshots/product-phone.jpg" width="260" alt="Product page on a phone">
+</p>
+
+## Deploy
+
+```bash
+firebase deploy --only apphosting                 # the website (Firebase App Hosting)
+firebase deploy --only firestore:rules,storage    # database and photo rules
 ```
 
 ## Tests
