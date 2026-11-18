@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Flower2 } from "lucide-react";
 import { WishButton } from "@/components/WishButton";
+import { AdminCardEdit } from "@/components/AdminTools";
 import { currentPrice, formatPrice, type Product } from "@/lib/catalog";
 
 export function ProductCard({ product: p, priority = false }: { product: Product; priority?: boolean }) {
@@ -41,6 +42,7 @@ export function ProductCard({ product: p, priority = false }: { product: Product
       </div>
     </Link>
     <WishButton id={p.id} name={p.name} className="absolute top-2 right-2 !min-h-9 !min-w-9 bg-surface/95" />
+    <AdminCardEdit id={p.id} name={p.name} />
     </div>
   );
 }

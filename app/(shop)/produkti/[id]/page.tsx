@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Check, ChevronLeft, Flower2, MessageCircle, Sparkles } from "lucide-react";
+import { AdminProductActions } from "@/components/AdminTools";
 import { Gallery } from "@/components/Gallery";
 import { Badge, ProductGrid } from "@/components/ProductCard";
 import { ShareButton } from "@/components/ShareButton";
@@ -73,6 +74,8 @@ async function ProductDetails({ params }: Pick<PageProps<"/produkti/[id]">, "par
           )}
 
           {p.description && <p className="mt-6 whitespace-pre-line text-ink-soft">{p.description}</p>}
+
+          <AdminProductActions id={p.id} available={p.available} />
 
           <div className="mt-8 hidden flex-wrap gap-3 md:flex">
             <a href={order} target="_blank" rel="noopener" className="btn btn-primary flex-1 !text-base">

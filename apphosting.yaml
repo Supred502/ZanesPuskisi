@@ -1,7 +1,7 @@
-# Firebase App Hosting (Cloud Run) settings. Rollouts happen on push to main once the backend is connected.
+# Firebase App Hosting (Cloud Run) settings. Deploy: firebase deploy --only apphosting
 runConfig:
   minInstances: 0   # scale to zero: costs nothing when nobody visits
-  maxInstances: 2
+  maxInstances: 1   # one server = one catalogue cache, so an admin save is visible at once (80 visitors at a time is plenty)
   concurrency: 80
   memoryMiB: 512
 

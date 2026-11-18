@@ -8,6 +8,7 @@ import { LogOut, Store } from "lucide-react";
 import { ADMIN_UIDS, app } from "@/lib/firebase";
 import { ProductList } from "@/components/admin/ProductList";
 import { ProductForm } from "@/components/admin/ProductForm";
+import { markAdmin } from "@/components/AdminTools";
 
 const auth = getAuth(app);
 
@@ -17,7 +18,14 @@ export function AdminApp() {
   const [error, setError] = useState("");
   const editing = useSearchParams().get("p"); // "jauns" = new product
 
-  useEffect(() => onAuthStateChanged(auth, setUser), []);
+  useEffect(
+    () =>
+      onAuthStateChanged(auth, (u) => {
+        setUser(u);
+        markAdmin(!!u && ADMIN_UIDS.includes(u.uid)); // turns on the admin tools on the shop pages
+      }),
+    [],
+  );
 
   async function login() {
     setError("");

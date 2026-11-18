@@ -4,8 +4,8 @@ import { app } from "@/lib/firebase";
 import { byNewest, toProduct, type Product } from "@/lib/catalog";
 
 // Products are public (firestore.rules), so the server reads them with the web SDK, no service account needed.
-// The admin clears the "products" tag on every save (app/admin/actions.ts), but that cache lives in one server instance,
-// so other instances and fresh starts re-read Firestore after at most 5 minutes.
+// The admin clears the "products" tag on every save (app/admin/actions.ts). The cache lives in the server's memory
+// (apphosting.yaml keeps one instance); after a cold start or a missed refresh it re-reads Firestore within 5 minutes.
 // shortcut: loads the whole catalogue in one read (~50 docs); add queries/pagination past ~1000 products.
 export async function getProducts(): Promise<Product[]> {
   "use cache";

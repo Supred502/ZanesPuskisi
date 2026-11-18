@@ -11,8 +11,12 @@ import { CATEGORIES, DEFAULT_CATEGORY, suggestCategory, toProduct } from "@/lib/
 
 type Pic = { url: string; file?: File }; // file = picked now, not uploaded yet (url is a local preview)
 
-export function ProductForm({ id, user }: { id: string | null; user: User }) {
+type Done = (result?: { id: string; deleted?: boolean }) => void;
+
+/** onDone: set when opened on top of a shop page (components/AdminTools.tsx); otherwise it returns to /admin. */
+export function ProductForm({ id, user, onDone }: { id: string | null; user: User; onDone?: Done }) {
   const router = useRouter();
+  const finish: Done = onDone ?? (() => router.push("/admin"));
   const fileInput = useRef<HTMLInputElement>(null);
   const [loaded, setLoaded] = useState(!id);
   const [original, setOriginal] = useState<string[]>([]);
@@ -109,7 +113,7 @@ export function ProductForm({ id, user }: { id: string | null; user: User }) {
         setStatus(`Augšupielādē attēlus ${++done}/${newOnes}…`);
       }
       setStatus("Saglabā…");
-      await saveProduct(
+      const savedId = await saveProduct(
         id,
         {
           name: name.trim(),
@@ -124,7 +128,7 @@ export function ProductForm({ id, user }: { id: string | null; user: User }) {
         },
         original.filter((u) => !images.includes(u)),
       );
-      router.push("/admin");
+      finish({ id: savedId });
     } catch (err) {
       console.error(err);
       setError(err instanceof Error && err.message.startsWith("„") ? err.message : "Saglabāt neizdevās. Pārbaudi internetu un mēģini vēlreiz.");
@@ -137,7 +141,7 @@ export function ProductForm({ id, user }: { id: string | null; user: User }) {
     setStatus("Dzēš…");
     try {
       await removeProduct(id, original);
-      router.push("/admin");
+      finish({ id, deleted: true });
     } catch {
       setError("Dzēst neizdevās.");
       setStatus("");
@@ -148,7 +152,11 @@ export function ProductForm({ id, user }: { id: string | null; user: User }) {
 
   return (
     <form onSubmit={save} className="wrap max-w-5xl py-8" noValidate>
-      <Link href="/admin" className="inline-flex items-center gap-1 text-sm text-ink-soft hover:text-brand"><ChevronLeft className="size-4" aria-hidden />Visi produkti</Link>
+      {onDone ? (
+        <button type="button" onClick={() => onDone()} disabled={busy} className="inline-flex cursor-pointer disabled:opacity-50 items-center gap-1 text-sm text-ink-soft hover:text-brand"><ChevronLeft className="size-4" aria-hidden />Atpakaļ uz lapu</button>
+      ) : (
+        <Link href="/admin" className="inline-flex items-center gap-1 text-sm text-ink-soft hover:text-brand"><ChevronLeft className="size-4" aria-hidden />Visi produkti</Link>
+      )}
       <h1 className="mt-3 text-2xl font-semibold">{id ? "Rediģēt produktu" : "Jauns produkts"}</h1>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_1.1fr]">
@@ -238,7 +246,7 @@ export function ProductForm({ id, user }: { id: string | null; user: User }) {
 
       <div className="sticky bottom-0 mt-8 flex flex-wrap items-center gap-3 border-t border-line bg-bg/95 py-4 backdrop-blur">
         <button type="submit" className="btn btn-primary !px-8" disabled={busy}>{busy ? status : id ? "Saglabāt izmaiņas" : "Pievienot produktu"}</button>
-        <Link href="/admin" className="btn btn-ghost">Atcelt</Link>
+        {onDone ? <button type="button" className="btn btn-ghost" onClick={() => onDone()} disabled={busy}>Atcelt</button> : <Link href="/admin" className="btn btn-ghost">Atcelt</Link>}
         {id && <button type="button" className="btn btn-danger ml-auto" onClick={del} disabled={busy}><Trash2 className="size-4" aria-hidden />Dzēst</button>}
         <span aria-live="polite" className="sr-only">{status}</span>
       </div>

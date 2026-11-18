@@ -13,7 +13,10 @@ export function Footer() {
         <FooterList title="Veikals" links={[["/produkti", "Pieejamie produkti"], ["/iedvesma", "Iepriekšējie darbi"], ["/velmes", "Vēlmju saraksts"]]} />
         <FooterList title="Kontakti" links={[[waHref(), "WhatsApp"], [TIKTOK_URL, "TikTok"], ["/par-mani", "Par mani"], ["/privatums", "Privātums"]]} />
       </div>
-      <div className="wrap border-t border-white/15 py-5 text-xs">© {SITE_NAME}</div>
+      <div className="wrap flex justify-between border-t border-white/15 py-5 text-xs">
+        <span>© {SITE_NAME}</span>
+        <Link href="/admin" className="hover:text-white">Pārvaldība</Link>
+      </div>
     </footer>
   );
 }
