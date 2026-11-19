@@ -7,6 +7,7 @@ import type { User } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { ArrowLeft, ArrowRight, ChevronLeft, ImagePlus, Star, Trash2, X } from "lucide-react";
 import { db, removeProduct, saveProduct, uploadImage } from "@/components/admin/db";
+import { useConfirm } from "@/components/Confirm";
 import { CATEGORIES, DEFAULT_CATEGORY, suggestCategory, toProduct } from "@/lib/catalog";
 
 type Pic = { url: string; file?: File }; // file = picked now, not uploaded yet (url is a local preview)
@@ -17,6 +18,7 @@ type Done = (result?: { id: string; deleted?: boolean }) => void;
 export function ProductForm({ id, user, onDone }: { id: string | null; user: User; onDone?: Done }) {
   const router = useRouter();
   const finish: Done = onDone ?? (() => router.push("/admin"));
+  const [ask, confirmDialog] = useConfirm();
   const fileInput = useRef<HTMLInputElement>(null);
   const [loaded, setLoaded] = useState(!id);
   const [original, setOriginal] = useState<string[]>([]);
@@ -137,7 +139,14 @@ export function ProductForm({ id, user, onDone }: { id: string | null; user: Use
   }
 
   async function del() {
-    if (!id || !confirm(`Dzēst „${name}” pavisam? To nevarēs atsaukt.\n\nJa darbs ir pārdots, labāk atzīmē to kā „Pārdots”: tad tas paliek galerijā.`)) return;
+    if (!id) return;
+    const yes = await ask({
+      title: `Dzēst „${name}”?`,
+      text: "To nevarēs atsaukt.\n\nJa darbs ir pārdots, labāk atzīmē to kā „Pārdots”: tad tas paliek galerijā „Iedvesma”.",
+      ok: "Dzēst",
+      danger: true,
+    });
+    if (!yes) return;
     setStatus("Dzēš…");
     try {
       await removeProduct(id, original);
@@ -250,6 +259,7 @@ export function ProductForm({ id, user, onDone }: { id: string | null; user: Use
         {id && <button type="button" className="btn btn-danger ml-auto" onClick={del} disabled={busy}><Trash2 className="size-4" aria-hidden />Dzēst</button>}
         <span aria-live="polite" className="sr-only">{status}</span>
       </div>
+      {confirmDialog}
     </form>
   );
 }

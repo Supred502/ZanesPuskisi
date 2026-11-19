@@ -5,7 +5,8 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { User } from "firebase/auth";
-import { CheckCircle2, LogOut, Pencil, Plus, Undo2 } from "lucide-react";
+import { CheckCircle2, LogOut, Pencil, Plus, Undo2, X } from "lucide-react";
+import { useConfirm } from "@/components/Confirm";
 
 // In-page admin tools on the shop itself. Firebase Auth is only loaded on devices where an admin has
 // signed in (flag set by /admin), so customers never download it.
@@ -62,17 +63,22 @@ const ProductForm = dynamic(() => import("@/components/admin/ProductForm").then(
   loading: () => <p className="py-16 text-center text-ink-soft">Ielādē…</p>,
 });
 
+const HASH = "#rediget"; // the open editor gets its own history entry, so the browser's Back button closes it
+
 /** Gold strip under the header + the editor overlay. Renders nothing for customers. */
 export function AdminBar() {
   const user = useAdmin();
   const router = useRouter();
+  const [ask, confirmDialog] = useConfirm();
   const [editing, setEditing] = useState<string | null | undefined>(undefined); // undefined = closed, null = new
   const dialog = useRef<HTMLDivElement>(null);
   const opener = useRef<Element | null>(null);
+  const afterBack = useRef<(() => void) | null>(null); // set when we close the editor ourselves via history.back()
 
   useEffect(() => {
     const on = (e: Event) => {
       opener.current = document.activeElement;
+      history.pushState(null, "", location.pathname + location.search + HASH);
       setEditing((e as CustomEvent<string | null>).detail);
     };
     window.addEventListener(EDIT_EVENT, on);
@@ -83,11 +89,22 @@ export function AdminBar() {
     if (editing === undefined) return;
     document.body.style.overflow = "hidden";
     dialog.current?.focus();
+    const onPop = async () => {
+      if (location.hash === HASH) return;
+      const then = afterBack.current;
+      afterBack.current = null;
+      if (then) return then();
+      // The browser's Back button
+      if (await ask({ title: "Aizvērt bez saglabāšanas?", text: "Nesaglabātās izmaiņas pazudīs.", ok: "Aizvērt" })) setEditing(undefined);
+      else history.pushState(null, "", location.pathname + location.search + HASH);
+    };
+    window.addEventListener("popstate", onPop);
     return () => {
+      window.removeEventListener("popstate", onPop);
       document.body.style.overflow = "";
       (opener.current as HTMLElement | null)?.focus?.();
     };
-  }, [editing]);
+  }, [editing, ask]);
 
   if (!user) return null;
 
@@ -96,12 +113,23 @@ export function AdminBar() {
     await signOut(getAuth(app)); // onAuthStateChanged then clears the flag and hides the tools
   }
 
-  function done(result?: { id: string; deleted?: boolean }) {
-    if (!result && !confirm("Aizvērt bez saglabāšanas? Neievietotās izmaiņas pazudīs.")) return;
-    setEditing(undefined);
-    if (!result) return;
-    if (result.deleted && window.location.pathname === `/produkti/${result.id}`) router.push("/produkti");
-    else router.refresh();
+  /** Close the editor and drop its history entry, then run `then`. */
+  function close(then: () => void = () => {}) {
+    const fin = () => {
+      setEditing(undefined);
+      then();
+    };
+    if (location.hash !== HASH) return fin();
+    afterBack.current = fin;
+    history.back();
+  }
+
+  async function done(result?: { id: string; deleted?: boolean }) {
+    if (!result) {
+      if (await ask({ title: "Aizvērt bez saglabāšanas?", text: "Nesaglabātās izmaiņas pazudīs.", ok: "Aizvērt" })) close();
+      return;
+    }
+    close(() => (result.deleted && location.pathname === `/produkti/${result.id}` ? router.push("/produkti") : router.refresh()));
   }
 
   return (
@@ -126,11 +154,21 @@ export function AdminBar() {
           aria-modal="true"
           aria-label={editing ? "Rediģēt produktu" : "Jauns produkts"}
           className="fixed inset-0 z-50 overflow-y-auto bg-bg outline-none"
-          onKeyDown={(e) => e.key === "Escape" && done()}
+          onKeyDown={(e) => e.key === "Escape" && !confirmDialog && done()}
         >
+          <div className="sticky top-0 z-10 bg-brand text-white shadow-[0_1px_0_rgb(212_176_98/0.35)]">
+            <div className="wrap flex h-14 max-w-5xl items-center gap-3">
+              <span className="font-semibold text-gold-bright">Pārvaldība</span>
+              <span className="truncate text-sm text-white/75">{editing ? "Rediģēt produktu" : "Jauns produkts"}</span>
+              <button type="button" className="btn ml-auto min-w-11 border-white/25 px-0 text-white hover:bg-white/10" onClick={() => done()} aria-label="Aizvērt">
+                <X className="size-5" aria-hidden />
+              </button>
+            </div>
+          </div>
           <ProductForm key={editing ?? "jauns"} id={editing} user={user} onDone={done} />
         </div>
       )}
+      {confirmDialog}
     </>
   );
 }
@@ -141,17 +179,19 @@ export function AdminProductActions({ id, available }: { id: string; available: 
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [now, setNow] = useState(available); // what we last saved, not the (possibly cached) page prop
+  const [error, setError] = useState("");
   if (!user) return null;
 
   async function toggle() {
     setBusy(true);
+    setError("");
     try {
       const { setAvailable } = await import("@/components/admin/db");
       await setAvailable(id, !now);
       setNow(!now);
       router.refresh();
     } catch {
-      alert("Neizdevās mainīt. Pārbaudi internetu un mēģini vēlreiz.");
+      setError("Neizdevās mainīt. Pārbaudi internetu un mēģini vēlreiz.");
     } finally {
       setBusy(false);
     }
@@ -166,6 +206,7 @@ export function AdminProductActions({ id, available }: { id: string; available: 
         {now ? <CheckCircle2 className="size-4" aria-hidden /> : <Undo2 className="size-4" aria-hidden />}
         {busy ? "Saglabā…" : now ? "Atzīmēt kā pārdotu" : "Atzīmēt kā pieejamu"}
       </button>
+      {error && <p role="alert" className="w-full text-sm text-danger">{error}</p>}
     </div>
   );
 }
